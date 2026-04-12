@@ -3,10 +3,21 @@ const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 
+require('dotenv').config(); // Ensure dotenv loads if present
+
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
+
+const ADMIN_PATH = process.env.ADMIN_PATH || '/system-override';
+
+app.get(ADMIN_PATH, (req, res) => {
+    res.sendFile(path.join(__dirname, 'views/admin-login.html'));
+});
+app.get(`${ADMIN_PATH}/dashboard`, (req, res) => {
+    res.sendFile(path.join(__dirname, 'views/admin.html'));
+});
 
 // In-memory data store
 let teams = {};

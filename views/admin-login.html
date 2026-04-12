@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tech Escape Arena – System Login</title>
   <meta name="description" content="System Administration Login" />
-  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="/css/styles.css" />
   <style>
     .auth-container {
       max-width: 400px;
@@ -47,7 +47,10 @@
         if (res.ok) {
           const data = await res.json();
           sessionStorage.setItem('tea_admin_token', data.token);
-          window.location.href = 'admin.html';
+          
+          let p = window.location.pathname;
+          if (p.endsWith('/')) p = p.slice(0, -1);
+          window.location.href = p + '/dashboard';
         } else {
           err.textContent = '❌ Invalid Credentials';
         }

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tech Escape Arena – Admin Control</title>
+  <meta name="description" content="System Administration" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <style>
+    .admin-container {
+      max-width: 1200px;
+      margin: 3rem auto;
+      padding: 2rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+    }
+    
+    .admin-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid rgba(255, 26, 26, 0.2);
+      padding-bottom: 1rem;
+    }
+
+    .admin-controls {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .btn-admin {
+      padding: 8px 16px;
+      background: rgba(255, 26, 26, 0.1);
+      border: 1px solid var(--neon);
+      border-radius: 4px;
+      color: var(--neon);
+      font-family: var(--font-mono);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-admin:hover {
+      background: var(--neon);
+      color: #000;
+      box-shadow: 0 0 10px var(--neon-glow);
+    }
+    
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+    
+    .admin-table th, .admin-table td {
+      padding: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+    }
+
+    .admin-table th {
+      color: var(--neon-cyan);
+    }
+
+    .override-input {
+      width: 60px;
+      background: #111;
+      border: 1px solid var(--border-color);
+      color: #fff;
+      padding: 4px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="scanlines"></div>
+  <div class="noise"></div>
+
+  <div class="admin-container">
+    <div class="admin-header">
+      <div>
+        <h1 class="dashboard-title">SYSTEM OVERSEER</h1>
+        <p class="login-subtitle">// Admin Privileges Active</p>
+      </div>
+      <div class="admin-controls">
+        <button class="btn-admin" id="btn-start-round">Start Round</button>
+        <button class="btn-admin" id="btn-toggle-timer">Pause Timer</button>
+        <button class="btn-admin" id="btn-toggle-lock">Lock Submissions</button>
+        <button class="btn-admin" id="btn-export-csv">Export Results (CSV)</button>
+        <a href="results.html" class="btn-admin" style="text-decoration:none;">View Leaderboard</a>
+      </div>
+    </div>
+
+    <div>
+      <h2 style="color: var(--text-primary); font-family: var(--font-heading); margin-bottom: 1rem;">Active Squads</h2>
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Team ID</th>
+            <th>Name</th>
+            <th>Members</th>
+            <th>Solved</th>
+            <th>Status</th>
+            <th>Answers (P1-P2-P3-P4)</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="admin-tbody">
+          <!-- Rendered via JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="/js/puzzles.js"></script>
+  <script src="/js/storage.js"></script>
+  <script>
+    (function () {
+      'use strict';
+      const tbody = document.getElementById('admin-tbody');
+      const btnExport = document.getElementById('btn-export-csv');
+      const btnTimer = document.getElementById('btn-toggle-timer');
+      const btnLock = document.getElementById('btn-toggle-lock');
+      const btnStart = document.getElementById('btn-start-round');
+      
+      const token = sessionStorage.getItem('tea_admin_token');
+      if (!token) {
+        let p = window.location.pathname;
+        if (p.endsWith('/dashboard')) p = p.slice(0, -10);
+        window.location.href = p;
+      }
+      
+      const ADMIN_STATE_KEY = 'tea_admin_state';
+      function getAdminState() {
+        const defaultState = { isPaused: false, isLocked: false, roundStartedAt: null };
+        const val = localStorage.getItem(ADMIN_STATE_KEY);
+        return val ? JSON.parse(val) : defaultState;
+      }
+      
+      async function pushAdminState(payload) {
+        await fetch('/api/adminState', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify(payload)
+        });
+        updateAdminUI(); 
+      }
+      
+      function updateAdminUI() {
+        const st = getAdminState();
+        btnTimer.textContent = st.isPaused ? 'Resume Timer' : 'Pause Timer';
+        btnTimer.style.background = st.isPaused ? 'var(--neon)' : '';
+        btnTimer.style.color = st.isPaused ? '#000' : '';
+      
+        btnLock.textContent = st.isLocked ? 'Unlock Submissions' : 'Lock Submissions';
+        btnLock.style.background = st.isLocked ? 'var(--neon)' : '';
+        btnLock.style.color = st.isLocked ? '#000' : '';
+        
+        if (st.roundStartedAt) {
+          btnStart.textContent = 'Round Active';
+          btnStart.style.opacity = '0.5';
+          btnStart.style.pointerEvents = 'none';
+          btnStart.style.background = 'var(--neon)';
+          btnStart.style.color = '#000';
+        }
+      }
+      
+      btnStart.addEventListener('click', () => {
+        if (confirm("START ROUND? The 45-minute countdown will begin immediately for all teams.")) {
+          pushAdminState({ startRound: true });
+        }
+      });
+      
+      btnTimer.addEventListener('click', () => pushAdminState({ isPaused: !getAdminState().isPaused }));
+      btnLock.addEventListener('click', () => pushAdminState({ isLocked: !getAdminState().isLocked }));
+      
+      async function pushAllTeams(updatedTeams) {
+        await fetch('/api/admin/teams', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify({ teams: updatedTeams })
+        });
+      }
+      
+      function renderTable() {
+        const teams = Object.values(Storage.getAllTeams());
+        tbody.innerHTML = '';
+        teams.forEach(t => {
+          const tr = document.createElement('tr');
+          let status = t.endTime ? 'Completed' : (t.startTime ? 'In Progress' : 'Not Started');
+          let statusColor = t.endTime ? '#00ffaa' : (t.startTime ? '#ffaa00' : '#888');
+      
+          let ansText = 'N/A';
+          try {
+            const { finalCode } = getPuzzlesForTeam(t.id);
+            ansText = finalCode;
+          } catch(e){}
+      
+          tr.innerHTML = `
+            <td>${t.id}</td>
+            <td>${t.name}</td>
+            <td style="max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${t.members}">${t.members}</td>
+            <td>
+              <input type="number" class="override-input" data-id="${t.id}" value="${t.puzzlesSolved}" min="0" max="4" />
+            </td>
+            <td style="color:${statusColor};">${status}</td>
+            <td><small style="color:var(--neon-cyan); font-size:0.8rem;">${ansText}</small></td>
+            <td>
+              <button class="btn-admin update-btn" data-id="${t.id}">Update</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      
+        document.querySelectorAll('.update-btn').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const id = e.target.getAttribute('data-id');
+            const input = document.querySelector(`.override-input[data-id="${id}"]`);
+            const newVal = parseInt(input.value, 10);
+            if (!isNaN(newVal) && newVal >= 0 && newVal <= 4) {
+              const allTeams = Storage.getAllTeams();
+              allTeams[id].puzzlesSolved = newVal;
+              Storage.saveAllTeams(allTeams);
+              e.target.textContent = 'Saving...';
+              await pushAllTeams(allTeams);
+              e.target.textContent = 'Saved!';
+              setTimeout(() => { e.target.textContent = 'Update'; renderTable(); }, 1000);
+            }
+          });
+        });
+      }
+      
+      btnExport.addEventListener('click', () => {
+        const teams = Object.values(Storage.getAllTeams());
+        let csv = 'Team ID,Name,Members,Puzzles Solved,Start Time,End Time,Total Time (ms),Qualified\n';
+        teams.forEach(t => {
+          csv += `"${t.id}","${t.name}","${t.members}",${t.puzzlesSolved},${t.startTime||''},${t.endTime||''},${(t.endTime&&t.startTime)?(t.endTime-t.startTime):''},${t.isQualified}\n`;
+        });
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = 'TechEscapeArena_Results.csv';
+        a.click(); window.URL.revokeObjectURL(url);
+      });
+      
+      updateAdminUI(); renderTable(); setInterval(renderTable, 5000);
+    })();
+  </script>
+</body>
+</html>
