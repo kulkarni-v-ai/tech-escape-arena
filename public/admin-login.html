@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tech Escape Arena – System Login</title>
+  <meta name="description" content="System Administration Login" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    .auth-container {
+      max-width: 400px;
+      margin: 10rem auto;
+      padding: 2rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="scanlines"></div>
+  <div class="noise"></div>
+
+  <div class="auth-container">
+    <h1 class="dashboard-title">ADMINISTRATOR</h1>
+    <p class="login-subtitle">// Auth Required</p>
+
+    <div style="margin-top: 2rem;">
+      <input type="password" id="admin-pass" class="team-input" placeholder="Enter System Password" style="width:100%;" />
+      <button id="btn-login" class="btn-primary" style="margin-top:1rem;">AUTHENTICATE</button>
+      <div id="auth-error" style="color:var(--neon); margin-top:1rem; min-height:20px;"></div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('btn-login').addEventListener('click', async () => {
+      const pwd = document.getElementById('admin-pass').value;
+      const err = document.getElementById('auth-error');
+      try {
+        const res = await fetch('/api/admin/auth', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({password: pwd})
+        });
+        if (res.ok) {
+          const data = await res.json();
+          sessionStorage.setItem('tea_admin_token', data.token);
+          window.location.href = 'admin.html';
+        } else {
+          err.textContent = '❌ Invalid Credentials';
+        }
+      } catch(e) {
+        err.textContent = '❌ Network Error';
+      }
+    });
+  </script>
+</body>
+</html>

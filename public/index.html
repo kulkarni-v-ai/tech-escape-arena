@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tech Escape Arena – Access Terminal</title>
+  <meta name="description" content="Tech Escape Arena – A hacker-style puzzle escape challenge. Enter the arena if you dare." />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔐</text></svg>" />
+</head>
+<body>
+
+  <!-- Overlays -->
+  <div class="scanlines"></div>
+  <div class="noise"></div>
+
+  <!-- Intro View -->
+  <div id="intro-view" class="view-section intro-container active">
+    <!-- Logo -->
+    <div class="logo-wrapper" id="logo">
+      <img class="logo-img" src="assets/logo.png" alt="Tech Escape Arena" />
+    </div>
+    <h1 class="title-text" id="title"></h1>
+    <div class="h-line" id="h-line"></div>
+    <p class="access-text" id="access-text">ACCESS GRANTED</p>
+  </div>
+
+  <!-- Registration View -->
+  <div id="registration-view" class="view-section login-container">
+    <div class="login-logo">
+      <img src="assets/logo.png" alt="Tech Escape Arena" style="width: 140px;" />
+    </div>
+    <h1 class="login-title" style="font-size: 2rem;">TEAM REGISTRATION</h1>
+    <p class="login-subtitle">// initialize new protocol</p>
+    <div class="login-box">
+      <div class="input-group">
+        <label for="reg-team-name">Team Name</label>
+        <input type="text" id="reg-team-name" placeholder="Enter team name..." autocomplete="off" spellcheck="false" />
+      </div>
+      <div class="input-group">
+        <label for="reg-members">Members (comma separated)</label>
+        <input type="text" id="reg-members" placeholder="Alice, Bob, Charlie..." autocomplete="off" spellcheck="false" />
+      </div>
+      <button class="btn-primary" id="btn-register">REGISTER TEAM</button>
+      <p class="error-message" id="reg-error-msg"></p>
+    </div>
+  </div>
+
+  <!-- Access Granted Overlay (For Login) -->
+  <div class="access-granted-overlay" id="access-granted-overlay">
+    <h1>ACCESS GRANTED</h1>
+    <div class="access-line"></div>
+    <p class="access-sub">Initializing arena...</p>
+  </div>
+
+  <!-- Login View -->
+  <div id="login-view" class="view-section login-container">
+
+    <!-- Logo -->
+    <div class="login-logo">
+      <img src="assets/logo.png" alt="Tech Escape Arena" />
+    </div>
+
+    <h1 class="login-title">TECH ESCAPE ARENA</h1>
+    <p class="login-subtitle" id="login-team-display">// system terminal v3.7.1</p>
+
+    <div class="login-box">
+      <div class="input-group">
+        <label for="access-key">Access Key</label>
+        <input type="text" id="access-key" placeholder="Enter access key..." autocomplete="off" spellcheck="false" />
+      </div>
+
+      <button class="btn-primary" id="submit-key">AUTHENTICATE</button>
+
+      <p class="error-message" id="error-msg"></p>
+      <p class="extra-hint" id="extra-hint">💡 Try inspecting the console...</p>
+      <p class="hint-text" style="opacity: 1; animation: none;">Not everything is visible on the surface.</p>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/storage.js"></script>
+  <script src="js/login.js"></script>
+</body>
+</html>

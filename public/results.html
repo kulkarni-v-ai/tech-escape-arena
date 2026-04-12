@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tech Escape Arena – Mission Results</title>
+  <meta name="description" content="Mission Evaluation and Elimination Results" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    .results-container {
+      max-width: 1000px;
+      margin: 3rem auto;
+      padding: 2rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+      text-align: center;
+    }
+    
+    .results-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 2rem;
+      text-align: left;
+    }
+    .results-table th, .results-table td {
+      padding: 12px 15px;
+      border-bottom: 1px solid rgba(255, 26, 26, 0.2);
+      font-family: var(--font-mono);
+    }
+    .results-table th {
+      color: var(--neon-cyan);
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .results-table td {
+      color: var(--text-primary);
+    }
+    .status-qualified {
+      color: #00ffaa;
+      font-weight: bold;
+      text-shadow: 0 0 10px rgba(0, 255, 170, 0.3);
+    }
+    .status-eliminated {
+      color: var(--neon);
+      opacity: 0.6;
+    }
+    .rank-cell { font-weight: bold; width: 60px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="scanlines"></div>
+  <div class="noise"></div>
+
+  <div class="results-container" style="animation: fadeIn 1s ease;">
+    <h1 class="dashboard-title">MISSION RESULTS</h1>
+    <p class="login-subtitle">// ROUND 1 ELIMINATIONS</p>
+
+    <table class="results-table">
+      <thead>
+        <tr>
+          <th class="rank-cell">Rank</th>
+          <th>Team ID</th>
+          <th>Team Name</th>
+          <th>Puzzles Solved</th>
+          <th>Total Time</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="results-body">
+        <!-- Rendered via JS -->
+      </tbody>
+    </table>
+    
+    <div style="margin-top: 2rem;">
+      <a href="index.html" class="btn-primary" style="display:inline-block; width:auto; padding: 10px 30px; text-decoration:none;">RETURN TO UPLINK</a>
+    </div>
+  </div>
+
+  <script src="js/storage.js"></script>
+  <script src="js/results.js"></script>
+</body>
+</html>

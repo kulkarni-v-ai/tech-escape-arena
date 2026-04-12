@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tech Escape Arena – Dashboard</title>
+  <meta name="description" content="Tech Escape Arena Dashboard – Solve 4 puzzles to escape the arena." />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>" />
+</head>
+<body>
+
+  <!-- Scanline overlay -->
+  <div class="scanlines"></div>
+
+  <!-- Particle canvas for victory effect -->
+  <canvas id="particle-canvas"></canvas>
+
+  <!-- Congratulations Overlay -->
+  <div class="congrats-overlay" id="congrats-overlay">
+    <h1>🏆 CONGRATULATIONS!</h1>
+    <p class="congrats-sub">You escaped the arena.</p>
+    <div class="congrats-stats">
+      <div class="stat-label">TOTAL TIME</div>
+      <div class="stat-value" id="congrats-time">--:--</div>
+    </div>
+  </div>
+
+  <!-- Dashboard -->
+  <div class="dashboard-container">
+
+    <!-- Header -->
+    <div class="dashboard-header">
+      <h1 class="dashboard-title">TECH ESCAPE ARENA</h1>
+      <p class="dashboard-team" id="team-id">TEAM: ---</p>
+    </div>
+
+    <!-- Timer -->
+    <div class="timer-section">
+      <p class="timer-label">Time Remaining</p>
+      <div class="timer-display" id="timer-display">45:00</div>
+    </div>
+
+    <!-- Progress -->
+    <div class="progress-section">
+      <div class="progress-bar-container">
+        <div class="progress-bar-fill" id="progress-fill"></div>
+      </div>
+      <p class="progress-label" id="progress-label">0 / 4 PUZZLES SOLVED</p>
+    </div>
+
+    <!-- Puzzle Grid -->
+    <div class="puzzle-grid" id="puzzle-grid">
+      <!-- Rendered by dashboard.js -->
+    </div>
+
+    <!-- Final Submission -->
+    <div class="final-section" id="final-section">
+      <h2>🔓 FINAL ESCAPE CODE</h2>
+      <p>Combine all your answers: ANSWER1-ANSWER2-ANSWER3-ANSWER4</p>
+      <div class="puzzle-input-area">
+        <input type="text" id="final-input" placeholder="Enter final code..." autocomplete="off" />
+        <button id="final-submit">ESCAPE</button>
+      </div>
+      <div class="puzzle-feedback" id="final-feedback"></div>
+    </div>
+
+  </div>
+
+  <!-- Scripts (order matters) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/puzzles.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>
