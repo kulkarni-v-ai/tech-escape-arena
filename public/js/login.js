@@ -117,26 +117,124 @@
       onComplete();
     }, 6600);
 
-    // Subtle audio blip on glitch
-    setTimeout(() => {
-      try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const bufferSize = ctx.sampleRate * 0.12;
-        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) {
-          data[i] = (Math.random() * 2 - 1) * 0.15;
-        }
-        const noise = ctx.createBufferSource();
-        noise.buffer = buffer;
-        const gain = ctx.createGain();
-        gain.gain.setValueAtTime(0.08, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
-        noise.connect(gain);
-        gain.connect(ctx.destination);
-        noise.start();
-      } catch (e) { }
-    }, 400);
+    // === GLITCH SOUND DESIGN ===
+    let audioCtx;
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+
+    function playGlitchBurst(ctx, time, duration, volume) {
+      // Distorted noise burst
+      const bufSize = ctx.sampleRate * duration;
+      const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < bufSize; i++) {
+        d[i] = (Math.random() * 2 - 1) * (1 - i / bufSize); // decaying noise
+      }
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      // Bandpass filter for digital texture
+      const bp = ctx.createBiquadFilter();
+      bp.type = 'bandpass';
+      bp.frequency.value = 2000 + Math.random() * 3000;
+      bp.Q.value = 5;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(volume, time);
+      g.gain.exponentialRampToValueAtTime(0.001, time + duration);
+      src.connect(bp); bp.connect(g); g.connect(ctx.destination);
+      src.start(time); src.stop(time + duration);
+    }
+
+    function playBassHit(ctx, time, freq, duration) {
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, time);
+      osc.frequency.exponentialRampToValueAtTime(20, time + duration);
+      g.gain.setValueAtTime(0.15, time);
+      g.gain.exponentialRampToValueAtTime(0.001, time + duration);
+      // Distortion
+      const dist = ctx.createWaveShaper();
+      const curve = new Float32Array(256);
+      for (let i = 0; i < 256; i++) { const x = (i * 2) / 256 - 1; curve[i] = (Math.PI + 3) * x / (Math.PI + 3 * Math.abs(x)); }
+      dist.curve = curve;
+      osc.connect(dist); dist.connect(g); g.connect(ctx.destination);
+      osc.start(time); osc.stop(time + duration);
+    }
+
+    function playPowerUp(ctx, time) {
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(200, time);
+      osc.frequency.exponentialRampToValueAtTime(1200, time + 0.5);
+      g.gain.setValueAtTime(0.08, time);
+      g.gain.setValueAtTime(0.08, time + 0.35);
+      g.gain.exponentialRampToValueAtTime(0.001, time + 0.6);
+      osc.connect(g); g.connect(ctx.destination);
+      osc.start(time); osc.stop(time + 0.6);
+    }
+
+    function playConfirmTone(ctx, time) {
+      [880, 1100].forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        g.gain.setValueAtTime(0.06, time + i * 0.12);
+        g.gain.exponentialRampToValueAtTime(0.001, time + i * 0.12 + 0.25);
+        osc.connect(g); g.connect(ctx.destination);
+        osc.start(time + i * 0.12); osc.stop(time + i * 0.12 + 0.25);
+      });
+    }
+
+    if (audioCtx) {
+      const t = audioCtx.currentTime;
+
+      // 0.4s — Logo appears: initial glitch burst + bass
+      setTimeout(() => {
+        const t = audioCtx.currentTime;
+        playGlitchBurst(audioCtx, t, 0.15, 0.12);
+        playBassHit(audioCtx, t, 80, 0.3);
+      }, 400);
+
+      // 0.6s–1.5s — Rapid stutter glitches during glitch-in animation
+      [600, 800, 950, 1100, 1350].forEach(ms => {
+        setTimeout(() => {
+          playGlitchBurst(audioCtx, audioCtx.currentTime, 0.06 + Math.random() * 0.06, 0.08);
+        }, ms);
+      });
+
+      // 1.6s — Secondary bass hit
+      setTimeout(() => {
+        playBassHit(audioCtx, audioCtx.currentTime, 60, 0.25);
+      }, 1600);
+
+      // 2.0s — Logo stabilizes: power-up sweep
+      setTimeout(() => {
+        playPowerUp(audioCtx, audioCtx.currentTime);
+      }, 2000);
+
+      // 2.3s — Title appears: subtle bass thud
+      setTimeout(() => {
+        playBassHit(audioCtx, audioCtx.currentTime, 50, 0.2);
+      }, 2300);
+
+      // 3.2s — ACCESS LOCKED typing: digital confirm tone
+      setTimeout(() => {
+        playConfirmTone(audioCtx, audioCtx.currentTime);
+      }, 3200);
+
+      // 5.8s — Fade out: low rumble
+      setTimeout(() => {
+        const osc = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = 35;
+        g.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
+        osc.connect(g); g.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.8);
+      }, 5800);
+    }
   }
 
   // --- Registration Logic ---
