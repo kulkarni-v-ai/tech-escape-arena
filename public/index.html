@@ -22,7 +22,7 @@
     </div>
     <h1 class="title-text" id="title"></h1>
     <div class="h-line" id="h-line"></div>
-    <p class="access-text" id="access-text">ACCESS GRANTED</p>
+    <p class="access-text" id="access-text">ACCESS LOCKED</p>
   </div>
 
   <!-- Registration View -->
@@ -46,6 +46,22 @@
     </div>
   </div>
 
+  <!-- Waiting Lobby View -->
+  <div id="waiting-view" class="view-section waiting-container">
+    <div class="waiting-logo-wrapper">
+      <img class="waiting-logo-img" src="assets/logo.png" alt="Tech Escape Arena" />
+    </div>
+    <div class="waiting-team-badge" id="waiting-team-id">TEAM: ---</div>
+    <div class="waiting-timer-display" id="waiting-timer">--:--</div>
+    <div class="waiting-status">
+      <div class="waiting-dots">
+        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      </div>
+      <p class="waiting-text" id="waiting-text">WAITING FOR HOST TO START...</p>
+    </div>
+    <div class="waiting-particles" id="waiting-particles"></div>
+  </div>
+
   <!-- Access Granted Overlay (For Login) -->
   <div class="access-granted-overlay" id="access-granted-overlay">
     <h1>ACCESS GRANTED</h1>
@@ -53,7 +69,7 @@
     <p class="access-sub">Initializing arena...</p>
   </div>
 
-  <!-- Login View -->
+  <!-- Login View (Binary Decode Challenge) -->
   <div id="login-view" class="view-section login-container">
 
     <!-- Logo -->
@@ -61,20 +77,33 @@
       <img src="assets/logo.png" alt="Tech Escape Arena" />
     </div>
 
-    <h1 class="login-title">TECH ESCAPE ARENA</h1>
-    <p class="login-subtitle" id="login-team-display">// system terminal v3.7.1</p>
+    <h1 class="login-title">DECODE TO ENTER</h1>
+    <p class="login-subtitle" id="login-team-display">// binary transmission intercepted</p>
+
+    <!-- Timer on login page -->
+    <div class="login-timer-section">
+      <p class="timer-label">Time Remaining</p>
+      <div class="timer-display login-timer" id="login-timer-display">--:--</div>
+    </div>
+
+    <!-- Binary Code Display -->
+    <div class="binary-display" id="binary-display">
+      <div class="binary-label">INTERCEPTED TRANSMISSION</div>
+      <div class="binary-code" id="binary-code">Loading...</div>
+      <div class="binary-hint">// decode binary → ASCII text</div>
+    </div>
 
     <div class="login-box">
       <div class="input-group">
-        <label for="access-key">Access Key</label>
-        <input type="text" id="access-key" placeholder="Enter access key..." autocomplete="off" spellcheck="false" />
+        <label for="access-key">Decoded Access Key</label>
+        <input type="text" id="access-key" placeholder="Enter decoded word..." autocomplete="off" spellcheck="false" />
       </div>
 
       <button class="btn-primary" id="submit-key">AUTHENTICATE</button>
 
       <p class="error-message" id="error-msg"></p>
-      <p class="extra-hint" id="extra-hint">💡 Try inspecting the console...</p>
-      <p class="hint-text" style="opacity: 1; animation: none;">Not everything is visible on the surface.</p>
+      <p class="extra-hint" id="extra-hint">💡 Each 8-digit group is one ASCII character...</p>
+      <p class="hint-text" style="opacity: 1; animation: none;">Binary is the language of machines.</p>
     </div>
   </div>
 

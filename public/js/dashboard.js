@@ -29,6 +29,7 @@
   // --- DOM ---
   const timerDisplay = document.getElementById('timer-display');
   const teamDisplay = document.getElementById('team-id');
+  const roundLabel = document.getElementById('round-label');
   const progressFill = document.getElementById('progress-fill');
   const progressLabel = document.getElementById('progress-label');
   const puzzleGrid = document.getElementById('puzzle-grid');
@@ -42,12 +43,37 @@
   // --- Init ---
   teamDisplay.textContent = 'TEAM: ' + Storage.getTeamId();
 
-  const startTime = Storage.getStartTime() || Date.now();
-  if (!Storage.getStartTime()) Storage.setStartTime(startTime);
+  // Update round label from admin state
+  try {
+    const val = localStorage.getItem('tea_admin_state');
+    if (val) {
+      const st = JSON.parse(val);
+      const round = st.currentRound || 1;
+      if (roundLabel) roundLabel.textContent = `ROUND ${round} – Time Remaining`;
+    }
+  } catch(e) {}
 
   let puzzlesSolved = Storage.getPuzzlesSolved();
 
   // --- Timer ---
+  function getStartTime() {
+    // First check if the team already has a startTime recorded
+    const teamStart = Storage.getStartTime();
+    if (teamStart) return teamStart;
+
+    // Otherwise check if the admin has started the round
+    let adminState = {};
+    try { const val = localStorage.getItem('tea_admin_state'); if (val) adminState = JSON.parse(val); } catch(e) {}
+
+    if (adminState.roundStartedAt) {
+      // Round was started — record it as this team's start time
+      Storage.setStartTime(adminState.roundStartedAt);
+      return adminState.roundStartedAt;
+    }
+
+    return null; // Round hasn't started yet
+  }
+
   function updateTimer() {
     let adminState = { isPaused: false, isLocked: false };
     try { const val = localStorage.getItem('tea_admin_state'); if (val) adminState = JSON.parse(val); } catch(e) {}
@@ -55,6 +81,14 @@
     if (adminState.isPaused) {
       timerDisplay.textContent = "PAUSED";
       timerDisplay.classList.add('warning');
+      return;
+    }
+
+    const startTime = getStartTime();
+
+    if (!startTime) {
+      timerDisplay.textContent = "WAITING...";
+      timerDisplay.classList.remove('warning', 'danger');
       return;
     }
 

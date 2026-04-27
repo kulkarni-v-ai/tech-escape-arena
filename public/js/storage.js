@@ -107,7 +107,7 @@ const Storage = (() => {
     pushTeam(id);
   }
 
-  // Admin / Registration Registration Helper
+  // Admin / Registration Helper
   function registerTeam(name, membersStr) {
     let id = 'TEA-' + Math.random().toString(36).substring(2, 6).toUpperCase();
     const teams = getAllTeams();
@@ -126,6 +126,7 @@ const Storage = (() => {
       id,
       name,
       members: membersStr,
+      loginCode: null,
       startTime: roundStart,
       endTime: null,
       puzzlesSolved: 0,
@@ -137,10 +138,19 @@ const Storage = (() => {
     };
     saveAllTeams(teams);
     
+    // Register with server — server generates the loginCode
     fetch('/api/register', {
        method: 'POST',
        headers: { 'Content-Type': 'application/json' },
        body: JSON.stringify({ id, name, members: membersStr })
+    }).then(res => res.json()).then(data => {
+      if (data.loginCode) {
+        const t = getAllTeams();
+        if (t[id]) {
+          t[id].loginCode = data.loginCode;
+          saveAllTeams(t);
+        }
+      }
     }).catch(e=>{});
     
     return id;
