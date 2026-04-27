@@ -270,7 +270,6 @@
   }
 
   async function fetchBinaryCode() {
-    const binaryDisplay = document.getElementById('binary-code');
     const teamId = Storage.getTeamId();
 
     try {
@@ -278,24 +277,16 @@
       if (res.ok) {
         const data = await res.json();
         if (data.started && data.binary) {
-          // Animate the binary code appearing
-          binaryDisplay.textContent = '';
-          const chars = data.binary.split('');
-          let idx = 0;
-          const typeInterval = setInterval(() => {
-            if (idx < chars.length) {
-              binaryDisplay.textContent += chars[idx];
-              idx++;
-            } else {
-              clearInterval(typeInterval);
-            }
-          }, 30);
+          // Output binary code ONLY to browser console
+          console.log('%c ▼ INTERCEPTED BINARY TRANSMISSION ▼ ', 'background: #111; color: #00ffaa; font-size: 14px; font-weight: bold; padding: 8px 16px; border: 1px solid #00ffaa; border-radius: 4px;');
+          console.log('%c ' + data.binary + ' ', 'background: #0a0a0a; color: #00ff88; font-size: 16px; font-family: monospace; padding: 10px 16px; border: 1px solid #333; border-radius: 4px; letter-spacing: 2px;');
+          console.log('%c 💡 Decode: binary → decimal → ASCII character ', 'color: #ffaa00; font-size: 12px; padding: 4px 0;');
         } else {
-          binaryDisplay.textContent = 'AWAITING TRANSMISSION...';
+          console.log('%c ⏳ Binary transmission not yet available — round not started ', 'color: #888; font-size: 12px;');
         }
       }
     } catch (e) {
-      binaryDisplay.textContent = 'CONNECTION ERROR';
+      console.log('%c ❌ Could not fetch binary code ', 'color: #ff003c;');
     }
   }
 
