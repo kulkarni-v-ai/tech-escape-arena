@@ -1254,9 +1254,62 @@ body::after {
 }
 
 
-@media (max-width: 600px) {
+
+@media (max-width: 768px) {
+  /* Login & Registration */
+  .login-container {
+    padding: 1.5rem 1rem;
+  }
+
+  .login-logo img {
+    width: 140px;
+  }
+
+  .login-title {
+    letter-spacing: 2px;
+  }
+
+  .login-subtitle {
+    margin-bottom: 1.5rem;
+    font-size: 0.78rem;
+  }
+
   .login-box {
-    padding: 1.8rem 1.5rem;
+    padding: 2rem 1.5rem;
+    max-width: 100%;
+  }
+
+  /* Binary display */
+  .binary-display {
+    padding: 1rem;
+    max-width: 100%;
+  }
+
+  .binary-code {
+    font-size: 0.7rem;
+  }
+
+  /* Timed hints */
+  .timed-hint-box {
+    padding: 0.8rem 1rem;
+  }
+
+  .timed-hint-content {
+    font-size: 0.78rem;
+  }
+
+  /* Dashboard */
+  .dashboard-container {
+    padding: 1.2rem 1rem;
+  }
+
+  .dashboard-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+  }
+
+  .timer-section {
+    margin-bottom: 1.5rem;
   }
 
   .puzzle-card {
@@ -1271,27 +1324,247 @@ body::after {
     width: 100%;
   }
 
-  .congrats-stats {
-    padding: 1.5rem;
+  .puzzle-challenge {
+    font-size: 0.8rem;
+    padding: 1rem;
+    letter-spacing: 1px;
   }
 
-  .dashboard-container {
-    padding: 1rem;
+  /* Logic grid — prevent overflow */
+  .logic-grid-wrapper {
+    font-size: 1.1rem !important;
+  }
+
+  .cipher-steps {
+    font-size: 0.72rem !important;
+    padding: 0.8rem !important;
+  }
+
+  .final-section {
+    padding: 1.5rem 1rem;
   }
 
   .final-section .puzzle-input-area {
     flex-direction: column;
   }
 
-  .waiting-logo-wrapper {
-    width: 60vw;
+  .congrats-stats {
+    padding: 1.5rem;
   }
 
-  .binary-display {
+  /* Results / Leaderboard */
+  .results-container {
+    margin: 1rem;
+    padding: 1.2rem 1rem;
+  }
+
+  .results-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .results-table th,
+  .results-table td {
+    padding: 10px 8px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+
+  .round-tabs {
+    gap: 0.4rem;
+  }
+
+  .round-tab {
+    padding: 8px 14px;
+    font-size: 0.65rem;
+  }
+
+  /* Waiting lobby */
+  .waiting-logo-wrapper {
+    width: 55vw;
+  }
+
+  .waiting-timer-display {
+    font-size: clamp(2.5rem, 8vw, 4rem);
+    letter-spacing: 4px;
+  }
+
+  /* Admin */
+  .admin-container {
+    margin: 1rem;
+    padding: 1.2rem 1rem;
+  }
+
+  .admin-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .admin-controls {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .btn-admin {
+    flex: 1 1 auto;
+    min-width: 120px;
+    text-align: center;
+  }
+
+  .round-status-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .team-count {
+    margin-left: 0;
+  }
+
+  .admin-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-table th,
+  .admin-table td {
+    white-space: nowrap;
+    font-size: 0.72rem;
+    padding: 8px 6px;
+  }
+
+  .table-scroll {
+    margin: 0 -0.5rem;
+    padding: 0 0.5rem;
+  }
+
+  /* Auth container (admin login) */
+  .auth-container {
+    margin: 5rem 1rem !important;
+    padding: 1.5rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Extra small screens */
+  .login-logo img {
+    width: 110px;
+  }
+
+  .login-title {
+    font-size: 1.4rem;
+    letter-spacing: 1px;
+  }
+
+  .login-box {
+    padding: 1.5rem 1.2rem;
+  }
+
+  .input-group input {
+    padding: 12px 14px;
+    font-size: 0.9rem;
+  }
+
+  .btn-primary {
+    padding: 12px;
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+  }
+
+  .dashboard-title {
+    font-size: 1rem;
+    letter-spacing: 2px;
+  }
+
+  .timer-display {
+    letter-spacing: 3px;
+  }
+
+  .puzzle-card {
     padding: 1rem;
   }
 
-  .binary-code {
+  .puzzle-title {
+    font-size: 0.95rem;
+  }
+
+  .puzzle-description {
+    font-size: 0.72rem;
+  }
+
+  .puzzle-challenge {
+    font-size: 0.72rem;
+    padding: 0.8rem;
+  }
+
+  .logic-grid-wrapper {
+    font-size: 1rem !important;
+  }
+
+  .puzzle-input-area input {
+    padding: 10px 12px;
+    font-size: 0.8rem;
+  }
+
+  .puzzle-input-area button {
+    padding: 10px 14px;
+    font-size: 0.65rem;
+  }
+
+  .results-table th,
+  .results-table td {
+    padding: 8px 6px;
     font-size: 0.7rem;
+  }
+
+  .round-tab {
+    padding: 6px 10px;
+    font-size: 0.6rem;
+  }
+
+  .waiting-logo-wrapper {
+    width: 65vw;
+  }
+
+  .waiting-text {
+    font-size: 0.75rem;
+    letter-spacing: 2px;
+  }
+
+  .timed-hint-label {
+    font-size: 0.6rem;
+  }
+
+  .timed-hint-content {
+    font-size: 0.72rem;
+  }
+
+  .congrats-overlay h1 {
+    letter-spacing: 3px;
+  }
+
+  .congrats-stats {
+    padding: 1rem;
+  }
+
+  .congrats-stats .stat-value {
+    font-size: 2rem;
+  }
+
+  .admin-controls {
+    gap: 0.4rem;
+  }
+
+  .btn-admin {
+    padding: 6px 10px;
+    font-size: 0.7rem;
+    min-width: 100px;
+  }
+
+  .round-timer {
+    font-size: 1.2rem !important;
   }
 }
