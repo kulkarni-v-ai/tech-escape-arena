@@ -100,12 +100,21 @@ function getPuzzlesForTeam(teamId) {
   // Additional clue: show the shift value and encoded hex of the first letter
   const firstLetterHex = '0x' + word1.charCodeAt(0).toString(16).toUpperCase();
 
-  // --- Puzzle 2: Logic Grid ---
-  const a = (hash % 6) + 3;
-  const b = (hash % 5) + 4;
-  const a2 = a + 1; const b2 = b + 1;
-  const a3 = a + 2; const b3 = b + 2;
-  const p2Answer = String(a3 * b3);
+  // --- Puzzle 2: Advanced Logic Grid ---
+  // Pattern: (col1² + col2) = col3  — not obvious at first glance
+  const p2a1 = (hash % 4) + 2;  // 2-5
+  const p2b1 = (hash % 7) + 3;  // 3-9
+  const p2a2 = p2a1 + 1;
+  const p2b2 = p2b1 + 2;
+  const p2a3 = p2a1 + 3;
+  const p2b3 = p2b1 + 1;
+  const p2a4 = p2a1 + 2;
+  const p2b4 = p2b1 + 3;
+
+  const row1result = (p2a1 * p2a1) + p2b1;
+  const row2result = (p2a2 * p2a2) + p2b2;
+  const row3result = (p2a3 * p2a3) + p2b3;
+  const p2Answer = String((p2a4 * p2a4) + p2b4);
 
   // --- Puzzle 3: QR Code ---
   const qrWord = TECH_WORDS[(idx + 15) % 40];
@@ -137,19 +146,21 @@ function getPuzzlesForTeam(teamId) {
     {
       id: 2,
       title: 'Logic Core',
-      difficulty: 'MEDIUM',
-      description: 'The core processor requires a missing frequency. Identify the pattern in the grid.',
+      difficulty: 'HARD',
+      description: 'The core processor requires a missing frequency. Identify the hidden operation between columns.',
       challenge: 'Find the missing value (?)',
       customHtml: `
         <div class="logic-grid-wrapper" style="display:flex; flex-direction:column; gap:8px; margin-bottom:15px; font-family:var(--font-mono); font-size:1.4rem; color:var(--neon); font-weight:bold; text-align:center;">
-          <div style="display:flex; justify-content:space-around; background:rgba(255,26,26,0.05); padding:12px; border:1px solid rgba(255,26,26,0.2); border-radius:6px;"><span>${a}</span><span style="color:#666;">|</span><span>${b}</span><span style="color:#666;">|</span><span>${a * b}</span></div>
-          <div style="display:flex; justify-content:space-around; background:rgba(255,26,26,0.05); padding:12px; border:1px solid rgba(255,26,26,0.2); border-radius:6px;"><span>${a2}</span><span style="color:#666;">|</span><span>${b2}</span><span style="color:#666;">|</span><span>${a2 * b2}</span></div>
-          <div style="display:flex; justify-content:space-around; background:rgba(255,26,26,0.05); padding:12px; border:1px solid rgba(255,26,26,0.2); border-radius:6px;"><span>${a3}</span><span style="color:#666;">|</span><span>${b3}</span><span style="color:#666;">|</span><span>?</span></div>
+          <div style="display:flex; justify-content:space-around; background:rgba(0,255,170,0.05); padding:8px; border-bottom:1px solid rgba(0,255,170,0.2); font-size:0.7rem; color:var(--neon-cyan); letter-spacing:2px;"><span>COL_A</span><span></span><span>COL_B</span><span></span><span>OUTPUT</span></div>
+          <div style="display:flex; justify-content:space-around; background:rgba(255,26,26,0.05); padding:12px; border:1px solid rgba(255,26,26,0.2); border-radius:6px;"><span>${p2a1}</span><span style="color:#666;">|</span><span>${p2b1}</span><span style="color:#666;">|</span><span>${row1result}</span></div>
+          <div style="display:flex; justify-content:space-around; background:rgba(255,26,26,0.05); padding:12px; border:1px solid rgba(255,26,26,0.2); border-radius:6px;"><span>${p2a2}</span><span style="color:#666;">|</span><span>${p2b2}</span><span style="color:#666;">|</span><span>${row2result}</span></div>
+          <div style="display:flex; justify-content:space-around; background:rgba(255,26,26,0.05); padding:12px; border:1px solid rgba(255,26,26,0.2); border-radius:6px;"><span>${p2a3}</span><span style="color:#666;">|</span><span>${p2b3}</span><span style="color:#666;">|</span><span>${row3result}</span></div>
+          <div style="display:flex; justify-content:space-around; background:rgba(255,107,61,0.1); padding:12px; border:1px solid rgba(255,107,61,0.4); border-radius:6px;"><span>${p2a4}</span><span style="color:#666;">|</span><span>${p2b4}</span><span style="color:#666;">|</span><span style="color:#ff6b3d; animation: pulse 1.5s infinite alternate;">?</span></div>
         </div>
       `,
-      hintText: 'Look at the relationship between the first two numbers in each row and the third.',
+      hintText: 'The operation is NOT simple multiplication or addition. Think about what you can do with COL_A alone first, then factor in COL_B.',
       answer: p2Answer,
-      hint: 'Multiply the first number by the second number.',
+      hint: 'Try squaring COL_A, then adding COL_B.',
       validate(input) { return input.trim() === this.answer; }
     },
     {
