@@ -1215,6 +1215,45 @@ body::after {
 /* ===========================
    RESPONSIVE
    =========================== */
+
+/* ===========================
+   TIMED HINT BOXES (Login Page)
+   =========================== */
+.timed-hint-box {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 170, 0, 0.3);
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+  margin-bottom: 0.8rem;
+  animation: hintReveal 0.6s ease;
+}
+
+.timed-hint-box:last-child {
+  border-color: rgba(0, 255, 170, 0.4);
+}
+
+.timed-hint-label {
+  font-family: var(--font-heading);
+  font-size: 0.65rem;
+  color: #ffaa00;
+  letter-spacing: 2px;
+  margin-bottom: 0.5rem;
+  opacity: 0.8;
+}
+
+.timed-hint-content {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+@keyframes hintReveal {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+
 @media (max-width: 600px) {
   .login-box {
     padding: 1.8rem 1.5rem;

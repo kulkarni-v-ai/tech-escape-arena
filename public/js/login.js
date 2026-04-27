@@ -259,6 +259,9 @@
     // Start login timer
     startLoginTimer();
 
+    // Start progressive timed hints
+    startTimedHints();
+
     // Console messages for the binary challenge
     showConsoleMessages();
 
@@ -266,6 +269,78 @@
     const extraHint = document.getElementById('extra-hint');
     if (Storage.getLoginAttempts() >= 3 && extraHint) {
       extraHint.classList.add('visible');
+    }
+  }
+
+  // ==========================
+  // PROGRESSIVE TIMED HINTS
+  // ==========================
+  let timedHintInterval = null;
+  let cachedLoginCode = null;
+  let cachedBinary = null;
+
+  async function startTimedHints() {
+    const teamId = Storage.getTeamId();
+
+    // Fetch team data for hints
+    try {
+      const [teamRes, codeRes] = await Promise.all([
+        fetch(`/api/team/${teamId}`),
+        fetch(`/api/team/${teamId}/code`)
+      ]);
+      if (teamRes.ok) {
+        const team = await teamRes.json();
+        cachedLoginCode = team.loginCode;
+      }
+      if (codeRes.ok) {
+        const codeData = await codeRes.json();
+        if (codeData.binary) cachedBinary = codeData.binary;
+      }
+    } catch (e) {}
+
+    // Check hints every 5 seconds
+    timedHintInterval = setInterval(() => updateTimedHints(), 5000);
+    updateTimedHints(); // run once immediately
+  }
+
+  function updateTimedHints() {
+    const hint10 = document.getElementById('hint-10min');
+    const hint20 = document.getElementById('hint-20min');
+    const hint30 = document.getElementById('hint-30min');
+    const text10 = document.getElementById('hint-10min-text');
+    const text20 = document.getElementById('hint-20min-text');
+    const text30 = document.getElementById('hint-30min-text');
+
+    // Get elapsed time from round start
+    let elapsed = 0;
+    try {
+      const adminState = JSON.parse(localStorage.getItem('tea_admin_state') || '{}');
+      if (adminState.roundStartedAt) {
+        elapsed = Date.now() - adminState.roundStartedAt;
+      }
+    } catch (e) {}
+
+    const elapsedMin = elapsed / (60 * 1000);
+
+    // 10 minutes: General hint
+    if (elapsedMin >= 10 && hint10.style.display === 'none') {
+      hint10.style.display = 'block';
+      text10.innerHTML = '💡 The binary code is hidden in the <strong style="color:#ff6b3d;">browser console</strong>. Press <strong style="color:#00ffaa;">F12</strong> → Console tab. Each group of 8 digits (0s and 1s) represents one letter using ASCII encoding.';
+    }
+
+    // 20 minutes: Stronger help — show decimal values
+    if (elapsedMin >= 20 && hint20.style.display === 'none' && cachedBinary) {
+      hint20.style.display = 'block';
+      const groups = cachedBinary.split(' ');
+      const decimals = groups.map(g => parseInt(g, 2));
+      text20.innerHTML = '🔢 The binary groups convert to these decimal numbers: <strong style="color:#ffaa00;">' + decimals.join(', ') + '</strong><br><span style="color:var(--text-dim); font-size:0.75rem;">Look up each number in an ASCII table to find the letter.</span>';
+    }
+
+    // 30 minutes: Give the password
+    if (elapsedMin >= 30 && hint30.style.display === 'none' && cachedLoginCode) {
+      hint30.style.display = 'block';
+      text30.textContent = cachedLoginCode;
+      if (timedHintInterval) clearInterval(timedHintInterval);
     }
   }
 

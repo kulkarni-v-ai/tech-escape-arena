@@ -93,6 +93,22 @@
       <div class="binary-hint" style="color: #ff6b3d; font-size: 0.95rem;">// transmission hidden — inspect the console (F12) to decode</div>
     </div>
 
+    <!-- Progressive Timed Hints -->
+    <div id="timed-hints" style="width:100%; max-width:500px; margin:0 auto;">
+      <div id="hint-10min" class="timed-hint-box" style="display:none;">
+        <div class="timed-hint-label">⏱ HINT UNLOCKED (10 min)</div>
+        <div class="timed-hint-content" id="hint-10min-text"></div>
+      </div>
+      <div id="hint-20min" class="timed-hint-box" style="display:none;">
+        <div class="timed-hint-label">⏱ HELP UNLOCKED (20 min)</div>
+        <div class="timed-hint-content" id="hint-20min-text"></div>
+      </div>
+      <div id="hint-30min" class="timed-hint-box" style="display:none;">
+        <div class="timed-hint-label">🔓 PASSWORD REVEALED (30 min)</div>
+        <div class="timed-hint-content" id="hint-30min-text" style="color:#00ffaa; font-size:1.3rem; letter-spacing:3px;"></div>
+      </div>
+    </div>
+
     <div class="login-box">
       <div class="input-group">
         <label for="access-key">Decoded Access Key</label>
