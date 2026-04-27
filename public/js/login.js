@@ -10,6 +10,7 @@
 
   // --- Views ---
   const views = {
+    gate: document.getElementById('gate-view'),
     intro: document.getElementById('intro-view'),
     registration: document.getElementById('registration-view'),
     waiting: document.getElementById('waiting-view'),
@@ -33,19 +34,37 @@
 
   const teamId = Storage.getTeamId();
   if (teamId && Storage.teamExists(teamId)) {
-    // Already registered — go to waiting or login
+    // Already registered — skip gate, go to waiting or login
     if (Storage.isIntroPlayed()) {
       enterWaitingOrLogin();
     } else {
-      playIntro(() => { enterWaitingOrLogin(); });
+      // Show gate, then play intro on tap
+      setupGate(() => { playIntro(() => { enterWaitingOrLogin(); }); });
     }
   } else {
     // Not registered
     if (Storage.isIntroPlayed()) {
       showView('registration');
     } else {
-      playIntro(() => { showView('registration'); });
+      // Show gate, then play intro on tap
+      setupGate(() => { playIntro(() => { showView('registration'); }); });
     }
+  }
+
+  // --- Gate (tap to unlock audio) ---
+  function setupGate(onTap) {
+    showView('gate');
+    const gateEl = views.gate;
+    gateEl.addEventListener('click', function handleGate() {
+      gateEl.removeEventListener('click', handleGate);
+      // Fade out gate
+      gateEl.style.transition = 'opacity 0.5s ease';
+      gateEl.style.opacity = '0';
+      setTimeout(() => {
+        gateEl.style.display = 'none';
+        onTap();
+      }, 500);
+    }, { once: true });
   }
 
   // Decide whether to show waiting lobby or login based on admin state
