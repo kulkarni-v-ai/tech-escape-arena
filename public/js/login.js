@@ -237,9 +237,36 @@
         playBassHit(audioCtx, audioCtx.currentTime, 50, 0.2);
       }, 2300);
 
-      // 3.2s — ACCESS LOCKED typing: digital confirm tone
+      // 3.2s — ACCESS LOCKED typing: typewriter key clicks
       setTimeout(() => {
-        playConfirmTone(audioCtx, audioCtx.currentTime);
+        const text = 'ACCESS LOCKED';
+        const charInterval = 1200 / text.length; // ~85ms per char matching CSS animation
+        for (let i = 0; i < text.length; i++) {
+          setTimeout(() => {
+            const t = audioCtx.currentTime;
+            // Key click: short noise burst with high-pass filter
+            const bufSize = audioCtx.sampleRate * 0.025;
+            const buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+            const d = buf.getChannelData(0);
+            for (let j = 0; j < bufSize; j++) {
+              d[j] = (Math.random() * 2 - 1) * (1 - j / bufSize);
+            }
+            const src = audioCtx.createBufferSource();
+            src.buffer = buf;
+            const hp = audioCtx.createBiquadFilter();
+            hp.type = 'highpass';
+            hp.frequency.value = 3000 + Math.random() * 2000;
+            const g = audioCtx.createGain();
+            g.gain.setValueAtTime(0.08 + Math.random() * 0.04, t);
+            g.gain.exponentialRampToValueAtTime(0.001, t + 0.025);
+            src.connect(hp); hp.connect(g); g.connect(audioCtx.destination);
+            src.start(t); src.stop(t + 0.025);
+          }, i * charInterval);
+        }
+        // Final confirmation beep after all characters typed
+        setTimeout(() => {
+          playConfirmTone(audioCtx, audioCtx.currentTime);
+        }, 1300);
       }, 3200);
 
       // 5.8s — Fade out: low rumble
