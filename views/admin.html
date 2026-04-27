@@ -158,6 +158,7 @@
       <div class="admin-controls">
         <button class="btn-admin" id="btn-start-round">Start Round</button>
         <button class="btn-admin" id="btn-restart-timer" style="border-color:#ffaa00; color:#ffaa00;">Restart Timer</button>
+        <button class="btn-admin" id="btn-end-round" style="border-color:#ff003c; color:#ff003c;">End Round</button>
         <button class="btn-admin" id="btn-toggle-timer">Pause Timer</button>
         <button class="btn-admin" id="btn-toggle-lock">Lock Submissions</button>
         <button class="btn-admin" id="btn-export-csv">Export CSV</button>
@@ -165,11 +166,19 @@
       </div>
     </div>
 
-    <!-- Round Status Bar -->
-    <div class="round-status-bar">
-      <div class="round-indicator" id="round-indicator">ROUND 1</div>
-      <div class="round-timer not-started" id="admin-timer">NOT STARTED</div>
-      <div class="team-count" id="team-count">0 teams registered</div>
+    <!-- Round Selector -->
+    <div class="round-status-bar" style="flex-direction:column; align-items:stretch; gap:1rem;">
+      <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.8rem;">
+        <div class="round-indicator" id="round-indicator">ROUND 1</div>
+        <div class="round-timer not-started" id="admin-timer">NOT STARTED</div>
+        <div class="team-count" id="team-count">0 teams registered</div>
+      </div>
+      <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+        <button class="btn-admin round-select-btn active" data-round="1" style="flex:1; text-align:center;">ROUND 1</button>
+        <button class="btn-admin round-select-btn" data-round="2" style="flex:1; text-align:center;">ROUND 2</button>
+        <button class="btn-admin round-select-btn" data-round="3" style="flex:1; text-align:center;">ROUND 3</button>
+        <button class="btn-admin round-select-btn" data-round="4" style="flex:1; text-align:center;">ROUND 4</button>
+      </div>
     </div>
 
     <div>
@@ -208,6 +217,8 @@
       const btnLock = document.getElementById('btn-toggle-lock');
       const btnStart = document.getElementById('btn-start-round');
       const btnRestart = document.getElementById('btn-restart-timer');
+      const btnEnd = document.getElementById('btn-end-round');
+      const roundSelectBtns = document.querySelectorAll('.round-select-btn');
       const roundIndicator = document.getElementById('round-indicator');
       const adminTimer = document.getElementById('admin-timer');
       const teamCount = document.getElementById('team-count');
@@ -255,18 +266,42 @@
         const round = st.currentRound || 1;
         roundIndicator.textContent = `ROUND ${round}`;
         
+        // Update round selector buttons
+        roundSelectBtns.forEach(btn => {
+          const r = parseInt(btn.getAttribute('data-round'));
+          btn.classList.remove('active');
+          btn.style.background = '';
+          btn.style.color = '';
+          btn.style.borderColor = '';
+          if (r === round) {
+            btn.classList.add('active');
+            btn.style.background = st.roundStartedAt ? 'var(--neon)' : 'rgba(255,26,26,0.2)';
+            btn.style.color = st.roundStartedAt ? '#000' : 'var(--neon)';
+            btn.style.borderColor = 'var(--neon)';
+          } else if (r < round) {
+            btn.style.background = 'rgba(0,255,170,0.1)';
+            btn.style.color = '#00ffaa';
+            btn.style.borderColor = '#00ffaa';
+          }
+        });
+
+        // Start button state
         if (st.roundStartedAt) {
           btnStart.textContent = 'Round Active';
           btnStart.style.opacity = '0.5';
           btnStart.style.pointerEvents = 'none';
           btnStart.style.background = 'var(--neon)';
           btnStart.style.color = '#000';
+          btnEnd.style.opacity = '1';
+          btnEnd.style.pointerEvents = 'auto';
         } else {
-          btnStart.textContent = 'Start Round';
+          btnStart.textContent = 'Start Round ' + round;
           btnStart.style.opacity = '1';
           btnStart.style.pointerEvents = 'auto';
           btnStart.style.background = '';
           btnStart.style.color = '';
+          btnEnd.style.opacity = '0.3';
+          btnEnd.style.pointerEvents = 'none';
         }
       }
 
@@ -302,8 +337,16 @@
       }
       
       btnStart.addEventListener('click', () => {
-        if (confirm("START ROUND? The 45-minute countdown will begin immediately for all teams.")) {
+        const round = getAdminState().currentRound || 1;
+        if (confirm(`START ROUND ${round}? The 45-minute countdown will begin immediately for all teams.`)) {
           pushAdminState({ startRound: true });
+        }
+      });
+
+      btnEnd.addEventListener('click', () => {
+        const round = getAdminState().currentRound || 1;
+        if (confirm(`END ROUND ${round}? This will stop the timer. You can then select the next round.`)) {
+          pushAdminState({ resetRound: true });
         }
       });
 
@@ -311,6 +354,21 @@
         if (confirm("RESTART TIMER? This will reset the 45-minute countdown from 00:00 for all teams. The round number stays the same.")) {
           pushAdminState({ restartRound: true });
         }
+      });
+
+      // Round selector — click to switch round (only when no round is active)
+      roundSelectBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const st = getAdminState();
+          if (st.roundStartedAt) {
+            alert('End the current round first before switching.');
+            return;
+          }
+          const newRound = parseInt(btn.getAttribute('data-round'));
+          if (confirm(`Switch to ROUND ${newRound}?`)) {
+            pushAdminState({ currentRound: newRound });
+          }
+        });
       });
       
       btnTimer.addEventListener('click', () => pushAdminState({ isPaused: !getAdminState().isPaused }));
