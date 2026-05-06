@@ -143,6 +143,113 @@
     .table-scroll {
       overflow-x: auto;
     }
+
+    /* Modal Overlay */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(6px);
+      z-index: 5000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+    .modal-box {
+      background: #0d0d0d;
+      border: 1px solid var(--neon);
+      border-radius: 12px;
+      padding: 2rem;
+      width: 90%;
+      max-width: 480px;
+      box-shadow: 0 0 40px var(--neon-glow), 0 0 80px rgba(255, 26, 26, 0.1);
+      animation: modalIn 0.3s ease;
+    }
+    @keyframes modalIn {
+      from { opacity: 0; transform: translateY(20px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .modal-title {
+      font-family: var(--font-heading);
+      font-size: 1rem;
+      color: var(--neon);
+      letter-spacing: 3px;
+      margin-bottom: 1.5rem;
+      text-align: center;
+      text-shadow: 0 0 15px var(--neon-glow);
+    }
+    .modal-field {
+      margin-bottom: 1.2rem;
+    }
+    .modal-field label {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--neon-dim);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 0.4rem;
+    }
+    .modal-field input,
+    .modal-field textarea {
+      width: 100%;
+      padding: 10px 12px;
+      background: rgba(255, 26, 26, 0.04);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .modal-field input:focus,
+    .modal-field textarea:focus {
+      border-color: var(--neon);
+      box-shadow: 0 0 10px var(--neon-glow);
+    }
+    .modal-field textarea {
+      resize: vertical;
+      min-height: 70px;
+    }
+    .modal-actions {
+      display: flex;
+      gap: 0.8rem;
+      margin-top: 1.5rem;
+    }
+    .modal-actions button {
+      flex: 1;
+      padding: 10px;
+      border-radius: 6px;
+      font-family: var(--font-heading);
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .modal-btn-cancel {
+      background: transparent;
+      border: 1px solid var(--text-dim);
+      color: var(--text-secondary);
+    }
+    .modal-btn-cancel:hover {
+      border-color: var(--text-secondary);
+      color: #fff;
+    }
+    .modal-btn-submit {
+      background: rgba(255, 26, 26, 0.15);
+      border: 1px solid var(--neon);
+      color: var(--neon);
+    }
+    .modal-btn-submit:hover {
+      background: var(--neon);
+      color: #000;
+      box-shadow: 0 0 15px var(--neon-glow);
+    }
   </style>
 </head>
 <body>
@@ -189,10 +296,7 @@
     <div>
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
         <h2 style="color: var(--text-primary); font-family: var(--font-heading); font-size: 1rem; letter-spacing: 2px;">Active Squads</h2>
-        <div style="display:flex; gap:0.5rem;">
-          <input type="text" id="new-team-name" placeholder="Team Name..." style="background:rgba(0,0,0,0.5); border:1px solid var(--border-color); color:#fff; padding:5px 10px; font-family:var(--font-mono); font-size:0.8rem; border-radius:4px;" />
-          <button class="btn-admin" id="btn-add-team" style="font-size:0.75rem; padding:5px 15px;">Add Team</button>
-        </div>
+        <button class="btn-admin" id="btn-open-add-modal" style="font-size:0.75rem; padding:6px 18px;">+ Add Team</button>
       </div>
       <div class="table-scroll">
         <table class="admin-table">
@@ -212,6 +316,45 @@
             <!-- Rendered via JS -->
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- Add Team Modal -->
+    <div class="modal-overlay" id="modal-add-team">
+      <div class="modal-box">
+        <div class="modal-title">+ NEW SQUAD</div>
+        <div class="modal-field">
+          <label for="add-team-name">Team Name</label>
+          <input type="text" id="add-team-name" placeholder="Enter team name..." autocomplete="off" />
+        </div>
+        <div class="modal-field">
+          <label for="add-team-members">Members</label>
+          <textarea id="add-team-members" placeholder="Member names (comma separated)..."></textarea>
+        </div>
+        <div class="modal-actions">
+          <button class="modal-btn-cancel" id="add-modal-cancel">CANCEL</button>
+          <button class="modal-btn-submit" id="add-modal-submit">ADD TEAM</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Team Modal -->
+    <div class="modal-overlay" id="modal-edit-team">
+      <div class="modal-box">
+        <div class="modal-title">EDIT SQUAD</div>
+        <input type="hidden" id="edit-team-id" />
+        <div class="modal-field">
+          <label for="edit-team-name">Team Name</label>
+          <input type="text" id="edit-team-name" placeholder="Team name..." autocomplete="off" />
+        </div>
+        <div class="modal-field">
+          <label for="edit-team-members">Members</label>
+          <textarea id="edit-team-members" placeholder="Member names (comma separated)..."></textarea>
+        </div>
+        <div class="modal-actions">
+          <button class="modal-btn-cancel" id="edit-modal-cancel">CANCEL</button>
+          <button class="modal-btn-submit" id="edit-modal-submit">SAVE</button>
+        </div>
       </div>
     </div>
   </div>
@@ -438,7 +581,7 @@
       
           tr.innerHTML = `
             <td>${t.id}</td>
-            <td class="edit-team-name" data-id="${t.id}" style="cursor:pointer; text-decoration:underline; ${t.eliminated ? 'color: #ff003c; text-decoration: line-through;' : ''}" title="Click to edit name">${t.name || '—'}</td>
+            <td style="${t.eliminated ? 'color: #ff003c; text-decoration: line-through;' : ''}">${t.name || '—'}</td>
             <td style="max-width:150px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${t.members || ''}">${t.members || '—'}</td>
             <td class="login-code-cell">${loginCode}</td>
             <td>
@@ -446,7 +589,8 @@
             </td>
             <td style="color:${statusColor};">${t.eliminated ? '<span style="color:#ff003c;font-weight:bold;">ELIMINATED</span>' : status}</td>
             <td><small style="color:var(--neon-cyan); font-size:0.7rem;">${ansText}</small></td>
-            <td style="display:flex; gap: 5px;">
+            <td style="display:flex; gap: 5px; flex-wrap:wrap;">
+              <button class="btn-admin edit-btn" data-id="${t.id}" style="font-size:0.7rem; padding:4px 10px; border-color:#00bfff; color:#00bfff;">Edit</button>
               <button class="btn-admin update-btn" data-id="${t.id}" style="font-size:0.7rem; padding:4px 10px;">Update</button>
               <button class="btn-admin eliminate-btn" data-id="${t.id}" style="font-size:0.7rem; padding:4px 10px; border-color:#ffaa00; color:#ffaa00;">
                 ${t.eliminated ? 'Restore' : 'Eliminate'}
@@ -457,30 +601,20 @@
           tbody.appendChild(tr);
         });
       
-        // Edit Team Name logic
-        document.querySelectorAll('.edit-team-name').forEach(td => {
-          td.addEventListener('click', async (e) => {
+        // Edit button — open edit modal
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
             const id = e.target.getAttribute('data-id');
             const allTeams = Storage.getAllTeams();
             const t = allTeams[id];
             if (!t) return;
-            const newName = prompt(`Enter new name for Team ${id}:`, t.name);
-            if (newName && newName.trim() !== '' && newName !== t.name) {
-              try {
-                await fetch('/api/admin/edit-team', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-                  body: JSON.stringify({ teamId: id, teamName: newName.trim(), members: t.members })
-                });
-                await Storage.syncWithServer();
-                renderTable();
-              } catch(err) {
-                alert('Failed to update team name');
-              }
-            }
+            document.getElementById('edit-team-id').value = id;
+            document.getElementById('edit-team-name').value = t.name || t.teamName || '';
+            document.getElementById('edit-team-members').value = t.members || '';
+            document.getElementById('modal-edit-team').classList.add('active');
           });
         });
-      
+
         document.querySelectorAll('.update-btn').forEach(btn => {
           btn.addEventListener('click', async (e) => {
             const id = e.target.getAttribute('data-id');
@@ -530,42 +664,86 @@
         });
       }
 
-      // Add Team Logic
-      const btnAddTeam = document.getElementById('btn-add-team');
-      const inputNewTeamName = document.getElementById('new-team-name');
-      if (btnAddTeam && inputNewTeamName) {
-        btnAddTeam.addEventListener('click', async () => {
-          const name = inputNewTeamName.value.trim();
-          if (!name) return alert('Enter a team name');
-          
-          btnAddTeam.disabled = true;
-          btnAddTeam.textContent = 'Adding...';
+      // ── Add Team Modal Logic ──
+      const addModal = document.getElementById('modal-add-team');
+      const editModal = document.getElementById('modal-edit-team');
 
-          try {
-            const res = await fetch('/api/admin/import-teams', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-              body: JSON.stringify({
-                teams: [{ teamName: name, members: '' }]
-              })
-            });
-            const data = await res.json();
-            if (data.success) {
-              inputNewTeamName.value = '';
-              // Sync and re-render
-              await Storage.syncWithServer();
-              renderTable();
-            } else {
-              alert('Failed to add team: ' + data.error);
-            }
-          } catch(err) {
-            alert('Network error while adding team');
-          } finally {
-            btnAddTeam.disabled = false;
-            btnAddTeam.textContent = 'Add Team';
+      document.getElementById('btn-open-add-modal').addEventListener('click', () => {
+        document.getElementById('add-team-name').value = '';
+        document.getElementById('add-team-members').value = '';
+        addModal.classList.add('active');
+        setTimeout(() => document.getElementById('add-team-name').focus(), 100);
+      });
+
+      document.getElementById('add-modal-cancel').addEventListener('click', () => addModal.classList.remove('active'));
+      addModal.addEventListener('click', (e) => { if (e.target === addModal) addModal.classList.remove('active'); });
+
+      document.getElementById('add-modal-submit').addEventListener('click', async () => {
+        const name = document.getElementById('add-team-name').value.trim();
+        const members = document.getElementById('add-team-members').value.trim();
+        if (!name) return alert('Enter a team name');
+
+        const btn = document.getElementById('add-modal-submit');
+        btn.disabled = true;
+        btn.textContent = 'ADDING...';
+
+        try {
+          const res = await fetch('/api/admin/import-teams', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({ teams: [{ teamName: name, members }] })
+          });
+          const data = await res.json();
+          if (data.success) {
+            addModal.classList.remove('active');
+            await Storage.syncWithServer();
+            renderTable();
+          } else {
+            alert('Failed to add team: ' + (data.error || 'Unknown error'));
           }
-        });
-      }
+        } catch(err) {
+          alert('Network error while adding team');
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'ADD TEAM';
+        }
+      });
+
+      // ── Edit Team Modal Logic ──
+      document.getElementById('edit-modal-cancel').addEventListener('click', () => editModal.classList.remove('active'));
+      editModal.addEventListener('click', (e) => { if (e.target === editModal) editModal.classList.remove('active'); });
+
+      document.getElementById('edit-modal-submit').addEventListener('click', async () => {
+        const teamId = document.getElementById('edit-team-id').value;
+        const teamName = document.getElementById('edit-team-name').value.trim();
+        const members = document.getElementById('edit-team-members').value.trim();
+        if (!teamName) return alert('Team name cannot be empty');
+
+        const btn = document.getElementById('edit-modal-submit');
+        btn.disabled = true;
+        btn.textContent = 'SAVING...';
+
+        try {
+          const res = await fetch('/api/admin/edit-team', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({ teamId, teamName, members })
+          });
+          const data = await res.json();
+          if (data.success) {
+            editModal.classList.remove('active');
+            await Storage.syncWithServer();
+            renderTable();
+          } else {
+            alert('Failed to update team: ' + (data.error || 'Unknown error'));
+          }
+        } catch(err) {
+          alert('Network error while updating team');
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'SAVE';
+        }
+      });
       
       btnExport.addEventListener('click', () => {
         const teams = Object.values(Storage.getAllTeams());
