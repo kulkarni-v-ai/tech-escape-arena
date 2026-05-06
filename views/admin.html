@@ -464,12 +464,19 @@
             const allTeams = Storage.getAllTeams();
             const t = allTeams[id];
             if (!t) return;
-            const newName = prompt(\`Enter new name for Team \${id}:\`, t.name);
+            const newName = prompt(`Enter new name for Team ${id}:`, t.name);
             if (newName && newName.trim() !== '' && newName !== t.name) {
-              t.name = newName.trim();
-              Storage.saveAllTeams(allTeams);
-              await pushAllTeams(allTeams);
-              renderTable();
+              try {
+                await fetch('/api/admin/edit-team', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                  body: JSON.stringify({ teamId: id, teamName: newName.trim(), members: t.members })
+                });
+                await Storage.syncWithServer();
+                renderTable();
+              } catch(err) {
+                alert('Failed to update team name');
+              }
             }
           });
         });
