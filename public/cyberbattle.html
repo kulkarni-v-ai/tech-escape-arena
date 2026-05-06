@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tech Escape Arena – Round 3: Cyber Battle</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚔️</text></svg>" />
+  <style>
+    .cb-wrap{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+    /* Top bar */
+    .cb-top{display:flex;justify-content:space-between;align-items:center;padding:1rem 2rem;border-bottom:1px solid rgba(255,26,26,0.2);}
+    .cb-round-badge{font-family:var(--font-mono);font-size:0.7rem;color:var(--neon);letter-spacing:3px;padding:6px 16px;border:1px solid rgba(255,26,26,0.3);border-radius:20px;background:rgba(255,26,26,0.08);}
+    .cb-match-info{font-family:var(--font-mono);font-size:0.7rem;color:var(--text-dim);letter-spacing:2px;}
+    /* Battle area */
+    .cb-battle{flex:1;display:flex;align-items:stretch;position:relative;}
+    /* Team panels */
+    .cb-team{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;position:relative;}
+    .cb-team.left{background:linear-gradient(135deg,rgba(255,26,26,0.06) 0%,transparent 60%);}
+    .cb-team.right{background:linear-gradient(225deg,rgba(0,170,255,0.06) 0%,transparent 60%);}
+    .cb-team-name{font-family:var(--font-heading);font-size:clamp(1.2rem,3vw,2rem);font-weight:900;letter-spacing:3px;margin-bottom:0.5rem;}
+    .cb-team.left .cb-team-name{color:var(--neon);}
+    .cb-team.right .cb-team-name{color:#00aaff;}
+    .cb-score{font-family:var(--font-heading);font-size:clamp(3rem,8vw,6rem);font-weight:900;line-height:1;}
+    .cb-team.left .cb-score{color:var(--neon);text-shadow:0 0 40px var(--neon-glow);}
+    .cb-team.right .cb-score{color:#00aaff;text-shadow:0 0 40px rgba(0,170,255,0.3);}
+    .cb-team-status{font-family:var(--font-mono);font-size:0.7rem;letter-spacing:2px;margin-top:0.5rem;min-height:20px;}
+    .cb-status-correct{color:#00ffaa;}
+    .cb-status-wrong{color:#ff003c;}
+    /* VS divider */
+    .cb-vs{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:5;}
+    .cb-vs-text{font-family:var(--font-heading);font-size:2rem;font-weight:900;color:var(--text-dim);letter-spacing:5px;text-shadow:0 0 20px rgba(255,255,255,0.1);}
+    .cb-vs-line{position:absolute;left:50%;top:0;bottom:0;width:1px;background:linear-gradient(to bottom,transparent,rgba(255,26,26,0.3),transparent);z-index:1;}
+    /* Center question area */
+    .cb-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:90%;max-width:700px;z-index:10;text-align:center;pointer-events:none;}
+    .cb-question-card{background:rgba(10,10,10,0.95);border:1px solid rgba(255,26,26,0.3);border-radius:16px;padding:2rem 2.5rem;backdrop-filter:blur(20px);box-shadow:0 0 60px rgba(0,0,0,0.8);pointer-events:all;display:none;}
+    .cb-question-card.visible{display:block;animation:fadeInUp 0.5s ease;}
+    .cb-q-category{font-family:var(--font-mono);font-size:0.65rem;color:var(--neon-cyan);letter-spacing:3px;margin-bottom:0.8rem;}
+    .cb-q-text{font-family:var(--font-body);font-size:clamp(1rem,2.5vw,1.4rem);color:var(--text-primary);line-height:1.6;margin-bottom:1.5rem;font-weight:500;}
+    .cb-q-timer{font-family:var(--font-heading);font-size:2.5rem;font-weight:900;color:var(--neon);text-shadow:0 0 20px var(--neon-glow);margin-bottom:1.5rem;letter-spacing:4px;}
+    .cb-q-timer.warning{color:#ffaa00;text-shadow:0 0 20px rgba(255,170,0,0.3);}
+    .cb-q-timer.danger{color:#ff003c;animation:pulse 0.5s ease infinite;}
+    .cb-options{display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;}
+    .cb-option{padding:14px;background:rgba(255,26,26,0.05);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:var(--font-mono);font-size:0.85rem;cursor:pointer;transition:all 0.3s;text-align:center;}
+    .cb-option:hover{border-color:var(--neon);background:rgba(255,26,26,0.1);transform:translateY(-2px);box-shadow:0 0 15px var(--neon-glow);}
+    .cb-option.selected-a{border-color:var(--neon);background:rgba(255,26,26,0.2);box-shadow:0 0 20px var(--neon-glow);}
+    .cb-option.selected-b{border-color:#00aaff;background:rgba(0,170,255,0.2);box-shadow:0 0 20px rgba(0,170,255,0.3);}
+    .cb-option.correct{border-color:#00ffaa!important;background:rgba(0,255,170,0.15)!important;color:#00ffaa!important;box-shadow:0 0 20px rgba(0,255,170,0.3)!important;}
+    .cb-option.wrong{border-color:#ff003c!important;background:rgba(255,0,60,0.15)!important;color:#ff003c!important;}
+    .cb-option.disabled{pointer-events:none;opacity:0.4;}
+    /* Answer controls (two columns) */
+    .cb-answer-panel{display:none;width:100%;pointer-events:all;}
+    .cb-answer-panel.visible{display:block;}
+    .cb-answer-row{display:flex;gap:1rem;margin-top:1rem;}
+    .cb-answer-col{flex:1;text-align:center;}
+    .cb-answer-label{font-family:var(--font-heading);font-size:0.7rem;letter-spacing:2px;margin-bottom:0.5rem;}
+    .cb-answer-col.left .cb-answer-label{color:var(--neon);}
+    .cb-answer-col.right .cb-answer-label{color:#00aaff;}
+    .cb-answer-btns{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;}
+    .cb-ans-btn{padding:10px;border-radius:6px;font-family:var(--font-mono);font-size:0.75rem;cursor:pointer;transition:all 0.2s;text-align:center;}
+    .cb-ans-btn.team-a{background:rgba(255,26,26,0.08);border:1px solid rgba(255,26,26,0.3);color:var(--neon);}
+    .cb-ans-btn.team-a:hover{background:rgba(255,26,26,0.2);box-shadow:0 0 10px var(--neon-glow);}
+    .cb-ans-btn.team-b{background:rgba(0,170,255,0.08);border:1px solid rgba(0,170,255,0.3);color:#00aaff;}
+    .cb-ans-btn.team-b:hover{background:rgba(0,170,255,0.2);box-shadow:0 0 10px rgba(0,170,255,0.3);}
+    .cb-ans-btn.locked{opacity:0.3;pointer-events:none;}
+    /* Bottom bar */
+    .cb-bottom{padding:1rem 2rem;border-top:1px solid rgba(255,26,26,0.2);display:flex;justify-content:center;gap:0.8rem;flex-wrap:wrap;}
+    .cb-ctrl{padding:8px 16px;background:rgba(255,26,26,0.08);border:1px solid var(--neon);border-radius:6px;color:var(--neon);font-family:var(--font-mono);font-size:0.75rem;cursor:pointer;transition:all 0.2s;}
+    .cb-ctrl:hover{background:var(--neon);color:#000;}
+    .cb-ctrl.green{border-color:#00ffaa;color:#00ffaa;}.cb-ctrl.green:hover{background:#00ffaa;color:#000;}
+    .cb-ctrl.danger{border-color:#ff003c;color:#ff003c;}.cb-ctrl.danger:hover{background:#ff003c;color:#fff;}
+    .cb-ctrl.yellow{border-color:#ffaa00;color:#ffaa00;}.cb-ctrl.yellow:hover{background:#ffaa00;color:#000;}
+    /* Waiting screen */
+    .cb-waiting{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:20;background:rgba(0,0,0,0.9);}
+    .cb-waiting.hidden{display:none;}
+    .cb-waiting h1{font-family:var(--font-heading);font-size:clamp(1.5rem,4vw,2.5rem);color:var(--neon);letter-spacing:5px;text-shadow:0 0 30px var(--neon-glow);animation:pulse 2s ease infinite;}
+    .cb-waiting p{font-family:var(--font-mono);font-size:0.8rem;color:var(--text-secondary);margin-top:1rem;letter-spacing:2px;}
+    /* Winner overlay */
+    .cb-winner-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:10000;display:none;align-items:center;justify-content:center;flex-direction:column;}
+    .cb-winner-overlay.active{display:flex;}
+    .cb-winner-title{font-family:var(--font-heading);font-size:clamp(1.5rem,5vw,3rem);letter-spacing:6px;animation:fadeInUp 0.8s ease;}
+    .cb-winner-name{font-family:var(--font-heading);font-size:clamp(2rem,6vw,4rem);font-weight:900;color:#FFD700;text-shadow:0 0 50px rgba(255,215,0,0.4);letter-spacing:8px;margin-top:1rem;animation:fadeInUp 0.8s ease 0.3s both;}
+    .cb-winner-sub{font-family:var(--font-mono);font-size:0.9rem;color:var(--text-secondary);margin-top:1rem;animation:fadeInUp 0.8s ease 0.6s both;}
+    /* Bracket */
+    .cb-bracket{position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:9999;display:none;align-items:center;justify-content:center;flex-direction:column;padding:2rem;}
+    .cb-bracket.active{display:flex;}
+    .cb-bracket-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.5rem;max-width:900px;width:100%;}
+    .cb-bracket-match{background:rgba(255,26,26,0.05);border:1px solid var(--border-color);border-radius:10px;padding:1rem;text-align:center;}
+    .cb-bracket-match.active-match{border-color:var(--neon);box-shadow:0 0 15px var(--neon-glow);}
+    .cb-bracket-match.done{border-color:#00ffaa;opacity:0.7;}
+    .cb-bracket-team{font-family:var(--font-mono);font-size:0.8rem;padding:6px;margin:4px 0;border-radius:4px;}
+    .cb-bracket-team.winner{color:#00ffaa;font-weight:bold;}
+    .cb-bracket-team.loser{color:var(--text-dim);text-decoration:line-through;}
+    /* Setup */
+    .cb-setup{position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:10001;display:flex;align-items:center;justify-content:center;}
+    .cb-setup.hidden{display:none;}
+    .cb-setup-card{background:var(--bg-card);border:1px solid var(--border-color);border-radius:16px;padding:2.5rem;max-width:600px;width:90%;max-height:90vh;overflow-y:auto;}
+    .cb-setup-card h2{font-family:var(--font-heading);color:var(--neon);letter-spacing:3px;margin-bottom:1.5rem;text-align:center;}
+    .cb-setup-row{display:flex;gap:0.5rem;align-items:center;margin-bottom:0.8rem;}
+    .cb-setup-label{font-family:var(--font-mono);font-size:0.7rem;color:var(--text-dim);width:70px;letter-spacing:1px;}
+    .cb-setup-input{flex:1;padding:10px;background:rgba(255,26,26,0.04);border:1px solid var(--border-color);border-radius:6px;color:var(--text-primary);font-family:var(--font-mono);font-size:0.85rem;outline:none;}
+    .cb-setup-input:focus{border-color:var(--neon);}
+    .cb-setup-match{background:rgba(0,0,0,0.3);border:1px solid var(--border-color);border-radius:8px;padding:1rem;margin-bottom:1rem;}
+    .cb-setup-match-title{font-family:var(--font-heading);font-size:0.7rem;color:var(--neon-cyan);letter-spacing:2px;margin-bottom:0.8rem;}
+    @media(max-width:600px){.cb-options{grid-template-columns:1fr;}.cb-answer-btns{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+  <div class="scanlines"></div><div class="noise"></div>
+
+  <!-- Setup Screen -->
+  <div class="cb-setup" id="setup-screen">
+    <div class="cb-setup-card">
+      <h2>⚔ BRACKET SETUP</h2>
+      <div id="setup-matches"></div>
+      <div style="display:flex;gap:0.5rem;margin-top:1rem;">
+        <input type="number" class="cb-setup-input" id="qPerBattle" value="10" min="3" max="20" style="max-width:80px;" />
+        <span style="font-family:var(--font-mono);font-size:0.75rem;color:var(--text-dim);align-self:center;">questions per battle</span>
+      </div>
+      <button class="cb-ctrl green" id="btn-save-bracket" style="width:100%;margin-top:1rem;padding:14px;">START TOURNAMENT</button>
+    </div>
+  </div>
+
+  <!-- Winner Overlay -->
+  <div class="cb-winner-overlay" id="winner-overlay">
+    <div class="cb-winner-title" style="color:var(--neon);">BATTLE OVER</div>
+    <div class="cb-winner-name" id="winner-name">TEAM NAME</div>
+    <div class="cb-winner-sub">ADVANCES TO THE FINAL ROUND</div>
+    <button class="cb-ctrl green" style="margin-top:2rem;padding:12px 30px;" onclick="dismissWinner()">CONTINUE</button>
+  </div>
+
+  <!-- Main Battle UI -->
+  <div class="cb-wrap">
+    <div class="cb-top">
+      <span class="cb-round-badge">ROUND 3 — CYBER BATTLE</span>
+      <span class="cb-match-info" id="match-info">MATCH 1 OF 4 · Q 0/10</span>
+      <a href="audience.html" class="cb-ctrl" style="font-size:0.65rem;padding:5px 12px;">PROJECTOR VIEW</a>
+    </div>
+
+    <div class="cb-battle">
+      <div class="cb-vs-line"></div>
+      <!-- Waiting -->
+      <div class="cb-waiting" id="waiting-screen">
+        <h1>CYBER BATTLE</h1>
+        <p>// select a match to begin</p>
+      </div>
+
+      <!-- Team A -->
+      <div class="cb-team left">
+        <div class="cb-team-name" id="team-a-name">TEAM A</div>
+        <div class="cb-score" id="score-a">0</div>
+        <div class="cb-team-status" id="status-a"></div>
+      </div>
+
+      <!-- Team B -->
+      <div class="cb-team right">
+        <div class="cb-team-name" id="team-b-name">TEAM B</div>
+        <div class="cb-score" id="score-b">0</div>
+        <div class="cb-team-status" id="status-b"></div>
+      </div>
+
+      <!-- Center Question -->
+      <div class="cb-center">
+        <div class="cb-question-card" id="question-card">
+          <div class="cb-q-category" id="q-category">GENERAL KNOWLEDGE</div>
+          <div class="cb-q-timer" id="q-timer">30</div>
+          <div class="cb-q-text" id="q-text">Question goes here?</div>
+          <div class="cb-options" id="q-options"></div>
+          <div class="cb-answer-panel" id="answer-panel">
+            <div class="cb-answer-row">
+              <div class="cb-answer-col left">
+                <div class="cb-answer-label" id="ans-label-a">TEAM A</div>
+                <div class="cb-answer-btns" id="ans-btns-a"></div>
+              </div>
+              <div class="cb-answer-col right">
+                <div class="cb-answer-label" id="ans-label-b">TEAM B</div>
+                <div class="cb-answer-btns" id="ans-btns-b"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Controls -->
+    <div class="cb-bottom" id="controls-bar">
+      <button class="cb-ctrl" id="btn-bracket">📊 BRACKET</button>
+      <button class="cb-ctrl green" id="btn-start-battle">▶ START BATTLE</button>
+      <button class="cb-ctrl yellow" id="btn-pause">⏸ PAUSE</button>
+      <button class="cb-ctrl" id="btn-next">⏭ NEXT Q</button>
+      <button class="cb-ctrl" id="btn-skip">⏩ SKIP</button>
+      <button class="cb-ctrl green" id="btn-declare-winner">🏆 DECLARE WINNER</button>
+      <button class="cb-ctrl danger" id="btn-reset-match">⟲ RESET MATCH</button>
+      <button class="cb-ctrl danger" id="btn-reset-all">🗑 RESET ALL</button>
+      <select id="match-select" class="cb-ctrl" style="background:#111;color:var(--text-primary);"></select>
+    </div>
+  </div>
+
+  <!-- Bracket Overlay -->
+  <div class="cb-bracket" id="bracket-overlay">
+    <h1 class="dashboard-title" style="margin-bottom:2rem;">TOURNAMENT BRACKET</h1>
+    <div class="cb-bracket-grid" id="bracket-grid"></div>
+    <button class="cb-ctrl" style="margin-top:2rem;" onclick="document.getElementById('bracket-overlay').classList.remove('active')">CLOSE</button>
+  </div>
+
+  <script src="js/cyberbattle.js"></script>
+</body>
+</html>

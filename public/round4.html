@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tech Escape Arena – Round 4: Escape Vault Finale</title>
+  <meta name="description" content="The Final Round – Escape the Vault to win." />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏆</text></svg>" />
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    .r4-container {
+      position:relative; z-index:1; max-width:700px; margin:0 auto; padding:2rem 1.5rem;
+      min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:1.5rem;
+    }
+    .r4-badge {
+      display:inline-block; padding:6px 24px; border-radius:20px;
+      background:rgba(255,26,26,0.12); border:1px solid rgba(255,26,26,0.4);
+      font-family:var(--font-mono); font-size:0.7rem; color:var(--neon);
+      letter-spacing:3px; animation: pulse 3s ease infinite;
+    }
+    /* Timer */
+    .r4-timer { font-family:var(--font-heading); font-weight:900; font-size:clamp(2rem,8vw,3.5rem);
+      color:var(--neon); text-shadow:0 0 30px var(--neon-glow); letter-spacing:6px; text-align:center; }
+    .r4-timer.warning { color:#ffaa00; text-shadow:0 0 30px rgba(255,170,0,0.3); }
+    .r4-timer.danger { color:#ff003c; animation:pulse 1s ease infinite; }
+    .r4-timer-label { font-family:var(--font-mono); font-size:0.7rem; color:var(--text-dim); letter-spacing:3px; text-align:center; }
+    /* Team ID entry */
+    .r4-identify {
+      width:100%; max-width:500px; background:var(--bg-card); border:1px solid var(--border-color);
+      border-radius:16px; padding:2rem; text-align:center; backdrop-filter:blur(20px);
+    }
+    .r4-identify h2 { font-family:var(--font-heading); font-size:1rem; color:var(--neon); letter-spacing:3px; margin-bottom:1rem; }
+    .r4-id-input {
+      width:100%; padding:14px; background:rgba(255,26,26,0.04); border:1px solid var(--border-color);
+      border-radius:8px; color:var(--neon); font-family:var(--font-mono); font-size:1rem;
+      letter-spacing:2px; outline:none; margin-bottom:1rem; text-align:center;
+    }
+    .r4-id-input:focus { border-color:var(--neon); box-shadow:0 0 15px var(--neon-glow); }
+    /* Progress bar */
+    .r4-progress { width:100%; max-width:500px; }
+    .r4-stages { display:flex; justify-content:space-between; align-items:center; position:relative; padding:0 10px; }
+    .r4-stage-dot {
+      width:40px; height:40px; border-radius:50%; border:2px solid var(--border-color);
+      background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center;
+      font-family:var(--font-heading); font-size:0.8rem; color:var(--text-dim);
+      position:relative; z-index:2; transition:all 0.5s ease;
+    }
+    .r4-stage-dot.completed { border-color:#00ffaa; color:#00ffaa; background:rgba(0,255,170,0.1);
+      box-shadow:0 0 15px rgba(0,255,170,0.3); }
+    .r4-stage-dot.active { border-color:var(--neon); color:var(--neon); background:rgba(255,26,26,0.15);
+      box-shadow:0 0 20px var(--neon-glow); animation:pulse 2s ease infinite; }
+    .r4-stage-line {
+      position:absolute; top:50%; left:30px; right:30px; height:2px; background:var(--border-color); z-index:1;
+    }
+    .r4-stage-fill {
+      height:100%; background:linear-gradient(90deg,#00ffaa,var(--neon)); transition:width 0.8s ease; width:0%;
+    }
+    /* Stage content */
+    .r4-stage-card {
+      width:100%; max-width:500px; background:var(--bg-card); border:1px solid var(--border-color);
+      border-radius:16px; padding:2.5rem; backdrop-filter:blur(20px);
+      box-shadow:0 0 50px rgba(0,0,0,0.5); animation:fadeInUp 0.8s ease;
+    }
+    .r4-stage-num { font-family:var(--font-mono); font-size:0.7rem; color:var(--neon-cyan); letter-spacing:3px; margin-bottom:0.5rem; }
+    .r4-stage-title { font-family:var(--font-heading); font-size:1.2rem; color:var(--neon); letter-spacing:3px; margin-bottom:1rem; }
+    .r4-hint {
+      background:rgba(0,0,0,0.4); border:1px solid rgba(255,26,26,0.1); border-radius:8px;
+      padding:1.2rem; font-family:var(--font-mono); font-size:0.85rem; color:var(--text-secondary);
+      line-height:1.8; margin-bottom:1.5rem; text-align:center;
+    }
+    .r4-answer-input {
+      width:100%; padding:14px; background:rgba(255,26,26,0.04); border:1px solid var(--border-color);
+      border-radius:8px; color:var(--neon); font-family:var(--font-mono); font-size:1rem;
+      letter-spacing:2px; outline:none; margin-bottom:1rem;
+    }
+    .r4-answer-input:focus { border-color:var(--neon); box-shadow:0 0 15px var(--neon-glow); }
+    .r4-submit-btn {
+      display:block; width:100%; padding:14px; background:transparent; border:2px solid var(--neon);
+      border-radius:8px; color:var(--neon); font-family:var(--font-heading); font-size:0.9rem;
+      font-weight:700; letter-spacing:3px; cursor:pointer; transition:all 0.3s;
+    }
+    .r4-submit-btn:hover { background:rgba(255,26,26,0.15); box-shadow:0 0 25px var(--neon-glow); transform:translateY(-2px); }
+    .r4-submit-btn:disabled { opacity:0.3; cursor:not-allowed; transform:none; }
+    .r4-feedback { font-family:var(--font-mono); font-size:0.8rem; text-align:center; margin-top:1rem; min-height:20px; }
+    .r4-feedback.error { color:#ff5555; }
+    .r4-feedback.success { color:#00ffaa; }
+    /* Upload area */
+    .r4-upload-area {
+      border:2px dashed var(--border-color); border-radius:12px; padding:2rem; text-align:center;
+      cursor:pointer; transition:all 0.3s; margin-bottom:1rem;
+    }
+    .r4-upload-area:hover { border-color:var(--neon); background:rgba(255,26,26,0.05); }
+    .r4-upload-area.has-file { border-color:#00ffaa; background:rgba(0,255,170,0.05); }
+    .r4-upload-icon { font-size:2.5rem; margin-bottom:0.5rem; }
+    .r4-upload-text { font-family:var(--font-mono); font-size:0.8rem; color:var(--text-secondary); }
+    .r4-preview { max-width:100%; max-height:200px; border-radius:8px; margin-top:1rem; display:none; }
+    /* Stage cleared overlay */
+    .r4-cleared-overlay {
+      position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95);
+      z-index:10000; display:flex; flex-direction:column; align-items:center; justify-content:center;
+      opacity:0; pointer-events:none; transition:opacity 0.5s;
+    }
+    .r4-cleared-overlay.active { opacity:1; pointer-events:all; }
+    .r4-cleared-title {
+      font-family:var(--font-heading); font-size:clamp(1.5rem,5vw,3rem); color:#00ffaa;
+      text-shadow:0 0 40px rgba(0,255,170,0.4); letter-spacing:6px;
+      animation:fadeInUp 0.6s ease;
+    }
+    .r4-cleared-sub {
+      font-family:var(--font-mono); font-size:0.9rem; color:var(--text-secondary);
+      margin-top:1rem; animation:fadeInUp 0.6s ease 0.3s both;
+    }
+    .r4-cleared-line {
+      width:0; height:2px; background:#00ffaa; margin-top:1.5rem;
+      box-shadow:0 0 15px #00ffaa; animation:expandLine 0.8s ease 0.5s forwards;
+    }
+    /* Victory screen */
+    .r4-victory {
+      position:fixed; top:0; left:0; width:100%; height:100%; background:#000;
+      z-index:10001; display:flex; flex-direction:column; align-items:center; justify-content:center;
+      opacity:0; pointer-events:none; transition:opacity 1s;
+    }
+    .r4-victory.active { opacity:1; pointer-events:all; }
+    .r4-victory-text1 {
+      font-family:var(--font-heading); font-size:clamp(1rem,3vw,1.5rem); color:var(--neon);
+      letter-spacing:5px; animation:fadeInUp 1s ease 0.5s both; opacity:0;
+    }
+    .r4-victory-main {
+      font-family:var(--font-heading); font-size:clamp(1.5rem,5vw,3rem); color:#00ffaa;
+      text-shadow:0 0 50px rgba(0,255,170,0.5); letter-spacing:8px; margin-top:1rem;
+      animation:fadeInUp 1s ease 1.5s both; opacity:0;
+    }
+    .r4-victory-rank {
+      font-family:var(--font-heading); font-size:clamp(2rem,6vw,4rem); color:#FFD700;
+      text-shadow:0 0 40px rgba(255,215,0,0.4); margin-top:2rem;
+      animation:fadeInUp 1s ease 2.5s both; opacity:0;
+    }
+    .r4-victory-time {
+      font-family:var(--font-mono); font-size:1rem; color:var(--text-secondary);
+      margin-top:1rem; animation:fadeInUp 1s ease 3s both; opacity:0;
+    }
+    /* Disqualified */
+    .r4-disqualified {
+      text-align:center; padding:3rem;
+    }
+    .r4-disqualified h2 { font-family:var(--font-heading); color:#ff003c; font-size:1.5rem; letter-spacing:4px; }
+    .r4-disqualified p { font-family:var(--font-mono); color:var(--text-dim); margin-top:1rem; }
+  </style>
+</head>
+<body>
+  <div class="scanlines"></div>
+  <div class="noise"></div>
+
+  <!-- Stage Cleared Overlay -->
+  <div class="r4-cleared-overlay" id="cleared-overlay">
+    <div class="r4-cleared-title" id="cleared-title">STAGE CLEARED</div>
+    <div class="r4-cleared-sub" id="cleared-sub">Unlocking next coordinates...</div>
+    <div class="r4-cleared-line"></div>
+  </div>
+
+  <!-- Victory Screen -->
+  <div class="r4-victory" id="victory-screen">
+    <div class="r4-victory-text1">ESCAPE SEQUENCE COMPLETED</div>
+    <div class="r4-victory-main">YOU ESCAPED THE ARENA</div>
+    <div class="r4-victory-rank" id="victory-rank">#1</div>
+    <div class="r4-victory-time" id="victory-time">Completion Time: --:--</div>
+  </div>
+
+  <div class="r4-container" style="animation:fadeIn 1s ease;">
+    <!-- Header -->
+    <div class="r4-badge">ROUND 4 — ESCAPE VAULT FINALE</div>
+
+    <!-- Timer -->
+    <div>
+      <div class="r4-timer-label">TIME REMAINING</div>
+      <div class="r4-timer" id="r4-timer">--:--</div>
+    </div>
+
+    <!-- Team Identification (shown first) -->
+    <div class="r4-identify" id="identify-section">
+      <h2>IDENTIFY YOUR TEAM</h2>
+      <input type="text" class="r4-id-input" id="team-id-input" placeholder="Enter Team ID (TEA-XXXX)" autocomplete="off" />
+      <button class="r4-submit-btn" id="btn-identify">ENTER VAULT</button>
+      <p class="r4-feedback" id="identify-error"></p>
+    </div>
+
+    <!-- Progress Bar (hidden until identified) -->
+    <div class="r4-progress" id="progress-section" style="display:none;">
+      <div class="r4-stages">
+        <div class="r4-stage-line"><div class="r4-stage-fill" id="stage-fill"></div></div>
+        <div class="r4-stage-dot" data-stage="1">1</div>
+        <div class="r4-stage-dot" data-stage="2">2</div>
+        <div class="r4-stage-dot" data-stage="3">3</div>
+        <div class="r4-stage-dot" data-stage="4">4</div>
+      </div>
+    </div>
+
+    <!-- Stage Content (dynamic) -->
+    <div id="stage-content" style="display:none; width:100%; max-width:500px;"></div>
+
+    <!-- Disqualified -->
+    <div class="r4-disqualified" id="disqualified-section" style="display:none;">
+      <h2>DISQUALIFIED</h2>
+      <p>Your team has been removed from the finale.</p>
+    </div>
+  </div>
+
+  <script src="js/round4.js"></script>
+</body>
+</html>

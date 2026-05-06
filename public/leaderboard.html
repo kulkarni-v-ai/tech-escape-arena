@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tech Escape Arena – Round 2 Leaderboard</title>
+  <meta name="description" content="Round 2 Live Leaderboard – Top 8 qualify for Round 3" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏆</text></svg>" />
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    .lb-container {
+      position: relative; z-index: 1;
+      max-width: 1000px; margin: 2rem auto; padding: 2rem;
+      background: var(--bg-card); border: 1px solid var(--border-color);
+      border-radius: 16px; backdrop-filter: blur(10px); text-align: center;
+      animation: fadeIn 1s ease;
+    }
+    .lb-badge {
+      display: inline-block; padding: 6px 20px; border-radius: 20px;
+      background: rgba(255,26,26,0.1); border: 1px solid rgba(255,26,26,0.3);
+      font-family: var(--font-mono); font-size: 0.7rem; color: var(--neon);
+      letter-spacing: 3px; margin-bottom: 1rem;
+    }
+    .lb-timer-row { margin: 1rem 0 1.5rem; }
+    .lb-timer {
+      font-family: var(--font-heading); font-size: clamp(1.8rem,5vw,2.5rem);
+      font-weight: 900; color: var(--neon); text-shadow: 0 0 20px var(--neon-glow);
+      letter-spacing: 4px;
+    }
+    .lb-timer.warning { color: #ffaa00; text-shadow: 0 0 20px rgba(255,170,0,0.3); }
+    .lb-timer.danger { color: #ff003c; text-shadow: 0 0 20px rgba(255,0,60,0.3); animation: pulse 1s ease infinite; }
+    .lb-stats {
+      display: flex; justify-content: center; gap: 2rem; margin: 1rem 0 2rem;
+      flex-wrap: wrap;
+    }
+    .lb-stat {
+      background: rgba(0,0,0,0.3); border: 1px solid var(--border-color);
+      border-radius: 10px; padding: 1rem 1.5rem; min-width: 120px;
+    }
+    .lb-stat-value {
+      font-family: var(--font-heading); font-size: 1.5rem; font-weight: 900;
+      color: var(--neon); text-shadow: 0 0 10px var(--neon-glow);
+    }
+    .lb-stat-label {
+      font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-dim);
+      letter-spacing: 2px; margin-top: 0.3rem;
+    }
+    /* Table */
+    .lb-table { width: 100%; border-collapse: collapse; margin-top: 1rem; text-align: left; }
+    .lb-table th, .lb-table td {
+      padding: 14px 16px; border-bottom: 1px solid rgba(255,26,26,0.15);
+      font-family: var(--font-mono);
+    }
+    .lb-table th {
+      color: var(--neon-cyan); font-weight: bold; text-transform: uppercase;
+      letter-spacing: 1px; font-size: 0.7rem;
+    }
+    .lb-table td { color: var(--text-primary); font-size: 0.85rem; }
+    .lb-table tbody tr { transition: all 0.3s ease; opacity: 0; transform: translateX(-20px); }
+    .lb-table tbody tr.revealed { opacity: 1; transform: translateX(0); }
+    .lb-table tbody tr:hover { background: rgba(255,26,26,0.04); }
+    .rank-cell { font-weight: bold; width: 60px; text-align: center; }
+    .rank-1 { color: #FFD700; font-size: 1.2rem; text-shadow: 0 0 10px rgba(255,215,0,0.4); }
+    .rank-2 { color: #C0C0C0; text-shadow: 0 0 8px rgba(192,192,192,0.3); }
+    .rank-3 { color: #CD7F32; text-shadow: 0 0 8px rgba(205,127,50,0.3); }
+    .status-qualified {
+      color: #00ffaa; font-weight: bold;
+      text-shadow: 0 0 10px rgba(0,255,170,0.3);
+    }
+    .status-eliminated { color: #ff003c; opacity: 0.7; }
+    .status-pending { color: #ffaa00; }
+    /* Waiting overlay */
+    .lb-waiting-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.95); z-index: 10000;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      transition: opacity 0.8s ease;
+    }
+    .lb-waiting-overlay.hidden { opacity: 0; pointer-events: none; }
+    .lb-waiting-text {
+      font-family: var(--font-heading); font-size: clamp(1.2rem,4vw,2rem);
+      color: var(--neon); letter-spacing: 5px; text-shadow: 0 0 30px var(--neon-glow);
+      animation: pulse 2s ease infinite;
+    }
+    .lb-waiting-sub {
+      font-family: var(--font-mono); font-size: 0.8rem;
+      color: var(--text-secondary); margin-top: 1rem; letter-spacing: 2px;
+    }
+    /* Qualify badge */
+    .qualify-badge {
+      display: inline-block; padding: 3px 10px; border-radius: 4px;
+      font-size: 0.7rem; letter-spacing: 1px; font-weight: bold;
+    }
+    .qualify-badge.q { background: rgba(0,255,170,0.15); color: #00ffaa; border: 1px solid rgba(0,255,170,0.3); }
+    .qualify-badge.e { background: rgba(255,0,60,0.15); color: #ff003c; border: 1px solid rgba(255,0,60,0.3); }
+  </style>
+</head>
+<body>
+  <div class="scanlines"></div>
+  <div class="noise"></div>
+
+  <!-- Waiting Overlay (shown until admin reveals) -->
+  <div class="lb-waiting-overlay" id="waiting-overlay">
+    <p class="lb-waiting-text">RESULTS PENDING</p>
+    <p class="lb-waiting-sub">// leaderboard will be revealed by host</p>
+  </div>
+
+  <div class="lb-container">
+    <div class="lb-badge">ROUND 2 — SMART TECH BOX</div>
+    <h1 class="dashboard-title">LIVE LEADERBOARD</h1>
+    <p class="login-subtitle">// Top 8 qualify for Round 3</p>
+
+    <div class="lb-timer-row">
+      <p class="timer-label">Time Remaining</p>
+      <div class="lb-timer" id="lb-timer">--:--</div>
+    </div>
+
+    <div class="lb-stats">
+      <div class="lb-stat">
+        <div class="lb-stat-value" id="stat-teams">0</div>
+        <div class="lb-stat-label">TEAMS</div>
+      </div>
+      <div class="lb-stat">
+        <div class="lb-stat-value" id="stat-submitted">0</div>
+        <div class="lb-stat-label">SUBMITTED</div>
+      </div>
+      <div class="lb-stat">
+        <div class="lb-stat-value" id="stat-correct">0</div>
+        <div class="lb-stat-label">CORRECT</div>
+      </div>
+    </div>
+
+    <table class="lb-table">
+      <thead>
+        <tr>
+          <th class="rank-cell">Rank</th>
+          <th>Team Name</th>
+          <th>Submission Time</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="lb-body"></tbody>
+    </table>
+
+    <div style="margin-top: 2rem;">
+      <a href="round2.html" class="btn-primary" style="display:inline-block; width:auto; padding:10px 24px; text-decoration:none; font-size:0.75rem;">BACK TO ROUND 2</a>
+    </div>
+  </div>
+
+  <script src="js/leaderboard-r2.js"></script>
+</body>
+</html>

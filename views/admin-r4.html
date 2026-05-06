@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tech Escape Arena – Round 4 Admin</title>
+  <meta name="description" content="Round 4 Admin – Escape Vault Finale" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    .a4-container { max-width:1400px; margin:2rem auto; padding:2rem; background:var(--bg-card); border:1px solid var(--border-color); border-radius:12px; backdrop-filter:blur(10px); }
+    .a4-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem; border-bottom:1px solid rgba(255,26,26,0.2); padding-bottom:1rem; flex-wrap:wrap; gap:1rem; }
+    .a4-nav { display:flex; gap:0.5rem; flex-wrap:wrap; }
+    .a4-nav a { padding:8px 16px; background:rgba(255,26,26,0.1); border:1px solid var(--border-color); border-radius:4px; color:var(--text-secondary); font-family:var(--font-mono); font-size:0.75rem; text-decoration:none; transition:all 0.2s; }
+    .a4-nav a:hover { border-color:var(--neon); color:var(--neon); }
+    .a4-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:2rem; }
+    @media(max-width:768px){.a4-grid{grid-template-columns:1fr;}}
+    .a4-panel { background:rgba(0,0,0,0.3); border:1px solid var(--border-color); border-radius:10px; padding:1.5rem; }
+    .a4-panel-title { font-family:var(--font-heading); font-size:0.8rem; color:var(--neon); letter-spacing:2px; margin-bottom:1rem; }
+    .a4-btn { padding:10px 18px; background:rgba(255,26,26,0.08); border:1px solid var(--neon); border-radius:6px; color:var(--neon); font-family:var(--font-mono); font-size:0.8rem; cursor:pointer; transition:all 0.2s; margin:0.3rem; }
+    .a4-btn:hover { background:var(--neon); color:#000; box-shadow:0 0 15px var(--neon-glow); }
+    .a4-btn.green { border-color:#00ffaa; color:#00ffaa; }
+    .a4-btn.green:hover { background:#00ffaa; color:#000; }
+    .a4-btn.yellow { border-color:#ffaa00; color:#ffaa00; }
+    .a4-btn.yellow:hover { background:#ffaa00; color:#000; }
+    .a4-btn.danger { border-color:#ff003c; color:#ff003c; }
+    .a4-btn.danger:hover { background:#ff003c; color:#fff; }
+    .a4-timer { font-family:var(--font-heading); font-size:2.5rem; font-weight:900; color:var(--neon); text-shadow:0 0 20px var(--neon-glow); letter-spacing:4px; margin:1rem 0; text-align:center; }
+    .a4-timer-status { font-family:var(--font-mono); font-size:0.75rem; color:var(--text-secondary); letter-spacing:2px; text-align:center; margin-bottom:1rem; }
+    .a4-input { width:100%; padding:10px; background:rgba(255,26,26,0.04); border:1px solid var(--border-color); border-radius:6px; color:var(--neon); font-family:var(--font-mono); font-size:0.85rem; outline:none; margin-bottom:0.8rem; }
+    .a4-input:focus { border-color:var(--neon); box-shadow:0 0 10px var(--neon-glow); }
+    .a4-table { width:100%; border-collapse:collapse; text-align:left; }
+    .a4-table th,.a4-table td { padding:10px 8px; border-bottom:1px solid rgba(255,255,255,0.08); font-family:var(--font-mono); font-size:0.78rem; }
+    .a4-table th { color:var(--neon-cyan); font-size:0.65rem; letter-spacing:1px; text-transform:uppercase; }
+    .a4-scroll { overflow-x:auto; max-height:400px; overflow-y:auto; }
+    .badge { display:inline-block; padding:2px 8px; border-radius:3px; font-size:0.65rem; letter-spacing:1px; }
+    .badge-green { background:rgba(0,255,170,0.15); color:#00ffaa; }
+    .badge-red { background:rgba(255,0,60,0.15); color:#ff003c; }
+    .badge-yellow { background:rgba(255,170,0,0.15); color:#ffaa00; }
+    .badge-dim { background:rgba(255,255,255,0.05); color:var(--text-dim); }
+    .a4-stats { display:flex; gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap; }
+    .a4-stat { flex:1; min-width:100px; background:rgba(0,0,0,0.3); border:1px solid var(--border-color); border-radius:8px; padding:1rem; text-align:center; }
+    .a4-stat-val { font-family:var(--font-heading); font-size:1.8rem; font-weight:900; color:var(--neon); text-shadow:0 0 10px var(--neon-glow); }
+    .a4-stat-lbl { font-family:var(--font-mono); font-size:0.6rem; color:var(--text-dim); letter-spacing:2px; margin-top:0.2rem; }
+    .a4-img-thumb { width:60px; height:60px; object-fit:cover; border-radius:6px; border:1px solid var(--border-color); cursor:pointer; }
+    .a4-modal-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:10000; display:none; align-items:center; justify-content:center; }
+    .a4-modal-overlay.active { display:flex; }
+    .a4-modal { background:var(--bg-secondary); border:1px solid var(--neon); border-radius:12px; padding:2rem; max-width:500px; width:90%; text-align:center; }
+    .a4-modal h3 { font-family:var(--font-heading); color:var(--neon); letter-spacing:2px; margin-bottom:1rem; }
+    .a4-modal p { font-family:var(--font-mono); font-size:0.85rem; color:var(--text-secondary); margin-bottom:1.5rem; }
+    .a4-modal img { max-width:100%; max-height:400px; border-radius:8px; margin-bottom:1rem; }
+  </style>
+</head>
+<body>
+  <div class="scanlines"></div><div class="noise"></div>
+
+  <!-- Modal -->
+  <div class="a4-modal-overlay" id="modal-overlay">
+    <div class="a4-modal" id="modal-content">
+      <h3 id="modal-title">CONFIRM</h3>
+      <p id="modal-text">Are you sure?</p>
+      <img id="modal-img" style="display:none;" />
+      <div style="display:flex;gap:0.8rem;justify-content:center;">
+        <button class="a4-btn danger" id="modal-confirm">CONFIRM</button>
+        <button class="a4-btn" id="modal-cancel">CANCEL</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="a4-container" style="animation:fadeIn 0.8s ease;">
+    <div class="a4-header">
+      <div>
+        <h1 class="dashboard-title">ROUND 4 CONTROL</h1>
+        <p class="login-subtitle">// Escape Vault Finale</p>
+      </div>
+      <div class="a4-nav">
+        <a href="" id="nav-r1">R1 ADMIN</a>
+        <a href="" id="nav-r2">R2 ADMIN</a>
+        <a href="/cyberbattle.html">R3 BATTLE</a>
+        <a href="/round4.html">R4 TEAM VIEW</a>
+        <a href="/results.html">RESULTS</a>
+      </div>
+    </div>
+
+    <div class="a4-stats">
+      <div class="a4-stat"><div class="a4-stat-val" id="stat-teams">0</div><div class="a4-stat-lbl">TEAMS</div></div>
+      <div class="a4-stat"><div class="a4-stat-val" id="stat-s1">0</div><div class="a4-stat-lbl">STAGE 1</div></div>
+      <div class="a4-stat"><div class="a4-stat-val" id="stat-s2">0</div><div class="a4-stat-lbl">STAGE 2</div></div>
+      <div class="a4-stat"><div class="a4-stat-val" id="stat-s3">0</div><div class="a4-stat-lbl">STAGE 3</div></div>
+      <div class="a4-stat"><div class="a4-stat-val" id="stat-done">0</div><div class="a4-stat-lbl">COMPLETED</div></div>
+    </div>
+
+    <div class="a4-grid">
+      <!-- Timer -->
+      <div class="a4-panel">
+        <div class="a4-panel-title">⏱ TIMER</div>
+        <div class="a4-timer" id="admin-timer">--:--</div>
+        <div class="a4-timer-status" id="timer-status">WAITING</div>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:center;">
+          <button class="a4-btn green" id="btn-start">▶ START</button>
+          <button class="a4-btn yellow" id="btn-pause">⏸ PAUSE</button>
+          <button class="a4-btn green" id="btn-resume" style="display:none;">▶ RESUME</button>
+          <button class="a4-btn danger" id="btn-reset">⟲ RESET</button>
+          <button class="a4-btn danger" id="btn-end">⏹ END</button>
+        </div>
+      </div>
+      <!-- Stage Answers -->
+      <div class="a4-panel">
+        <div class="a4-panel-title">🔑 STAGE ANSWERS</div>
+        <label style="font-family:var(--font-mono);font-size:0.7rem;color:var(--text-dim);">Stage 1 (Crossword)</label>
+        <input class="a4-input" id="ans-1" placeholder="Correct keyword..." />
+        <label style="font-family:var(--font-mono);font-size:0.7rem;color:var(--text-dim);">Stage 2 (Chit)</label>
+        <input class="a4-input" id="ans-2" placeholder="Correct code..." />
+        <label style="font-family:var(--font-mono);font-size:0.7rem;color:var(--text-dim);">Stage 3 (Rubik's)</label>
+        <input class="a4-input" id="ans-3" placeholder="Volunteer keyword..." />
+        <button class="a4-btn green" id="btn-save-answers" style="width:100%;">SAVE ANSWERS</button>
+      </div>
+    </div>
+
+    <!-- Stage Hints -->
+    <div class="a4-panel" style="margin-bottom:1.5rem;">
+      <div class="a4-panel-title">💡 STAGE HINTS (shown to teams)</div>
+      <div class="a4-grid" style="margin-bottom:0;">
+        <div><label style="font-family:var(--font-mono);font-size:0.65rem;color:var(--text-dim);">Stage 1</label><textarea class="a4-input" id="hint-1" rows="2" style="resize:vertical;"></textarea></div>
+        <div><label style="font-family:var(--font-mono);font-size:0.65rem;color:var(--text-dim);">Stage 2</label><textarea class="a4-input" id="hint-2" rows="2" style="resize:vertical;"></textarea></div>
+        <div><label style="font-family:var(--font-mono);font-size:0.65rem;color:var(--text-dim);">Stage 3</label><textarea class="a4-input" id="hint-3" rows="2" style="resize:vertical;"></textarea></div>
+        <div><label style="font-family:var(--font-mono);font-size:0.65rem;color:var(--text-dim);">Stage 4</label><textarea class="a4-input" id="hint-4" rows="2" style="resize:vertical;"></textarea></div>
+      </div>
+      <button class="a4-btn green" id="btn-save-hints" style="width:100%;margin-top:1rem;">SAVE HINTS</button>
+    </div>
+
+    <!-- Controls -->
+    <div class="a4-panel" style="margin-bottom:1.5rem;">
+      <div class="a4-panel-title">⚙ CONTROLS</div>
+      <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+        <button class="a4-btn" id="btn-lock">🔒 LOCK SUBMISSIONS</button>
+        <button class="a4-btn danger" id="btn-reset-round">🗑 RESET ROUND 4</button>
+        <button class="a4-btn" id="btn-export">📄 EXPORT CSV</button>
+      </div>
+    </div>
+
+    <!-- Live Progress -->
+    <div class="a4-panel" style="margin-bottom:1.5rem;">
+      <div class="a4-panel-title">📡 TEAM PROGRESS</div>
+      <div class="a4-scroll">
+        <table class="a4-table">
+          <thead><tr><th>Team</th><th>Name</th><th>Stage</th><th>S1</th><th>S2</th><th>S3</th><th>S4</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="progress-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Final Submissions -->
+    <div class="a4-panel">
+      <div class="a4-panel-title">🏆 FINAL SUBMISSIONS</div>
+      <div class="a4-scroll">
+        <table class="a4-table">
+          <thead><tr><th>Rank</th><th>Team</th><th>Name</th><th>Image</th><th>Time</th><th>Validation</th><th>Actions</th></tr></thead>
+          <tbody id="submissions-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/admin-r4.js"></script>
+</body>
+</html>

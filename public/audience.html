@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tech Escape Arena – Cyber Battle LIVE</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    body{overflow:hidden;}
+    .au-wrap{position:relative;z-index:1;height:100vh;display:flex;flex-direction:column;}
+    .au-top{display:flex;justify-content:space-between;align-items:center;padding:1rem 3rem;border-bottom:1px solid rgba(255,26,26,0.2);}
+    .au-badge{font-family:var(--font-mono);font-size:0.8rem;color:var(--neon);letter-spacing:4px;padding:8px 20px;border:1px solid rgba(255,26,26,0.3);border-radius:20px;background:rgba(255,26,26,0.08);}
+    .au-match-info{font-family:var(--font-mono);font-size:0.75rem;color:var(--text-dim);letter-spacing:2px;}
+    .au-battle{flex:1;display:flex;position:relative;}
+    .au-team{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+    .au-team.left{background:linear-gradient(135deg,rgba(255,26,26,0.08) 0%,transparent 50%);}
+    .au-team.right{background:linear-gradient(225deg,rgba(0,170,255,0.08) 0%,transparent 50%);}
+    .au-team-name{font-family:var(--font-heading);font-size:clamp(1.5rem,4vw,2.5rem);font-weight:900;letter-spacing:4px;}
+    .au-team.left .au-team-name{color:var(--neon);}
+    .au-team.right .au-team-name{color:#00aaff;}
+    .au-score{font-family:var(--font-heading);font-size:clamp(5rem,12vw,10rem);font-weight:900;line-height:1;}
+    .au-team.left .au-score{color:var(--neon);text-shadow:0 0 60px var(--neon-glow);}
+    .au-team.right .au-score{color:#00aaff;text-shadow:0 0 60px rgba(0,170,255,0.4);}
+    .au-vs-line{position:absolute;left:50%;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,transparent,rgba(255,26,26,0.4),transparent);}
+    .au-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:85%;max-width:800px;z-index:10;text-align:center;}
+    .au-q-card{background:rgba(10,10,10,0.95);border:1px solid rgba(255,26,26,0.3);border-radius:20px;padding:2.5rem 3rem;backdrop-filter:blur(20px);box-shadow:0 0 80px rgba(0,0,0,0.9);display:none;}
+    .au-q-card.visible{display:block;animation:fadeInUp 0.5s ease;}
+    .au-q-cat{font-family:var(--font-mono);font-size:0.75rem;color:var(--neon-cyan);letter-spacing:4px;margin-bottom:1rem;}
+    .au-q-timer{font-family:var(--font-heading);font-size:clamp(2rem,5vw,4rem);font-weight:900;color:var(--neon);text-shadow:0 0 30px var(--neon-glow);margin-bottom:1rem;letter-spacing:6px;}
+    .au-q-timer.warning{color:#ffaa00;}
+    .au-q-timer.danger{color:#ff003c;animation:pulse 0.5s ease infinite;}
+    .au-q-text{font-family:var(--font-body);font-size:clamp(1.2rem,3vw,1.8rem);color:var(--text-primary);line-height:1.6;margin-bottom:2rem;font-weight:500;}
+    .au-options{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+    .au-opt{padding:18px;background:rgba(255,26,26,0.05);border:1px solid var(--border-color);border-radius:12px;color:var(--text-primary);font-family:var(--font-mono);font-size:clamp(0.9rem,2vw,1.1rem);text-align:center;transition:all 0.3s;}
+    .au-opt.correct{border-color:#00ffaa;background:rgba(0,255,170,0.15);color:#00ffaa;box-shadow:0 0 20px rgba(0,255,170,0.3);transform:scale(1.05);}
+    .au-opt.wrong{border-color:#ff003c;background:rgba(255,0,60,0.1);color:#ff003c;opacity:0.5;}
+    .au-opt.selected-a{border-color:var(--neon);box-shadow:inset 0 0 15px var(--neon-glow);}
+    .au-opt.selected-b{border-color:#00aaff;box-shadow:inset 0 0 15px rgba(0,170,255,0.3);}
+    .au-waiting{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:20;background:rgba(0,0,0,0.9);}
+    .au-waiting.hidden{display:none;}
+    .au-waiting h1{font-family:var(--font-heading);font-size:clamp(2rem,5vw,4rem);color:var(--neon);letter-spacing:8px;text-shadow:0 0 40px var(--neon-glow);animation:pulse 2s ease infinite;}
+    .au-waiting p{font-family:var(--font-mono);color:var(--text-secondary);margin-top:1rem;font-size:1rem;letter-spacing:3px;}
+    /* Winner */
+    .au-winner{position:fixed;inset:0;background:#000;z-index:10000;display:none;flex-direction:column;align-items:center;justify-content:center;}
+    .au-winner.active{display:flex;}
+    .au-winner-pre{font-family:var(--font-heading);font-size:clamp(1rem,3vw,1.5rem);color:var(--neon);letter-spacing:5px;animation:fadeInUp 1s ease;}
+    .au-winner-name{font-family:var(--font-heading);font-size:clamp(2.5rem,7vw,5rem);font-weight:900;color:#FFD700;text-shadow:0 0 60px rgba(255,215,0,0.5);letter-spacing:10px;margin-top:1rem;animation:fadeInUp 1s ease 0.5s both;}
+    .au-winner-sub{font-family:var(--font-mono);font-size:1.2rem;color:var(--text-secondary);margin-top:1.5rem;letter-spacing:3px;animation:fadeInUp 1s ease 1s both;}
+    /* Qualification */
+    .au-qualify{position:fixed;inset:0;background:#000;z-index:10001;display:none;flex-direction:column;align-items:center;justify-content:center;gap:1.5rem;}
+    .au-qualify.active{display:flex;}
+    .au-qualify-title{font-family:var(--font-heading);font-size:clamp(1rem,3vw,1.5rem);color:var(--neon);letter-spacing:5px;}
+    .au-qualify-main{font-family:var(--font-heading);font-size:clamp(1.2rem,3.5vw,2rem);color:#00ffaa;letter-spacing:4px;text-shadow:0 0 30px rgba(0,255,170,0.3);}
+    .au-qualify-team{font-family:var(--font-heading);font-size:clamp(1.5rem,4vw,2.5rem);font-weight:900;color:#FFD700;letter-spacing:6px;opacity:0;transform:translateY(20px);transition:all 0.8s ease;}
+    .au-qualify-team.revealed{opacity:1;transform:translateY(0);}
+  </style>
+</head>
+<body>
+  <div class="scanlines"></div><div class="noise"></div>
+  <div class="au-winner" id="au-winner">
+    <div class="au-winner-pre">BATTLE OVER</div>
+    <div class="au-winner-name" id="au-winner-name">TEAM</div>
+    <div class="au-winner-sub">ADVANCES TO FINAL ROUND</div>
+  </div>
+  <div class="au-qualify" id="au-qualify">
+    <div class="au-qualify-title">ONLY 4 TEAMS SURVIVED</div>
+    <div class="au-qualify-main">THE CYBER BATTLE</div>
+    <div id="au-qualify-list"></div>
+  </div>
+  <div class="au-wrap">
+    <div class="au-top">
+      <span class="au-badge">ROUND 3 — CYBER BATTLE</span>
+      <span class="au-match-info" id="au-match-info">MATCH 1 OF 4</span>
+    </div>
+    <div class="au-battle">
+      <div class="au-vs-line"></div>
+      <div class="au-waiting" id="au-waiting"><h1>CYBER BATTLE</h1><p>// awaiting next match</p></div>
+      <div class="au-team left">
+        <div class="au-team-name" id="au-name-a">TEAM A</div>
+        <div class="au-score" id="au-score-a">0</div>
+      </div>
+      <div class="au-team right">
+        <div class="au-team-name" id="au-name-b">TEAM B</div>
+        <div class="au-score" id="au-score-b">0</div>
+      </div>
+      <div class="au-center">
+        <div class="au-q-card" id="au-q-card">
+          <div class="au-q-cat" id="au-q-cat">CATEGORY</div>
+          <div class="au-q-timer" id="au-q-timer">30</div>
+          <div class="au-q-text" id="au-q-text">Question?</div>
+          <div class="au-options" id="au-options"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="js/audience.js"></script>
+</body>
+</html>

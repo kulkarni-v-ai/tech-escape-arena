@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: tech-escape-arena
+    runtime: node
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: MONGODB_URI
+        value: mongodb+srv://devcobraaa:Omiie%401512@techescapearena.fouhmkr.mongodb.net/techescapearena?retryWrites=true&w=majority&appName=Techescapearena
+      - key: ADMIN_PASSWORD
+        value: admin
+      - key: ADMIN_PATH
+        value: /system-override
+      - key: NODE_ENV
+        value: production

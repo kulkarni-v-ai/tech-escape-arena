@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tech Escape Arena – Round 2 Admin</title>
+  <meta name="description" content="Round 2 Admin Control Panel" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    .a2-container {
+      max-width: 1400px; margin: 2rem auto; padding: 2rem;
+      background: var(--bg-card); border: 1px solid var(--border-color);
+      border-radius: 12px; backdrop-filter: blur(10px);
+    }
+    .a2-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 2rem; border-bottom: 1px solid rgba(255,26,26,0.2);
+      padding-bottom: 1rem; flex-wrap: wrap; gap: 1rem;
+    }
+    .a2-nav { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .a2-nav a {
+      padding: 8px 16px; background: rgba(255,26,26,0.1);
+      border: 1px solid var(--border-color); border-radius: 4px;
+      color: var(--text-secondary); font-family: var(--font-mono);
+      font-size: 0.75rem; text-decoration: none; transition: all 0.2s;
+    }
+    .a2-nav a:hover { border-color: var(--neon); color: var(--neon); }
+
+    /* Grid layout */
+    .a2-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 768px) { .a2-grid { grid-template-columns: 1fr; } }
+
+    .a2-panel {
+      background: rgba(0,0,0,0.3); border: 1px solid var(--border-color);
+      border-radius: 10px; padding: 1.5rem;
+    }
+    .a2-panel-title {
+      font-family: var(--font-heading); font-size: 0.8rem; color: var(--neon);
+      letter-spacing: 2px; margin-bottom: 1rem; text-transform: uppercase;
+    }
+    .a2-btn {
+      padding: 10px 18px; background: rgba(255,26,26,0.08);
+      border: 1px solid var(--neon); border-radius: 6px; color: var(--neon);
+      font-family: var(--font-mono); font-size: 0.8rem; cursor: pointer;
+      transition: all 0.2s; margin: 0.3rem;
+    }
+    .a2-btn:hover { background: var(--neon); color: #000; box-shadow: 0 0 15px var(--neon-glow); }
+    .a2-btn.green { border-color: #00ffaa; color: #00ffaa; }
+    .a2-btn.green:hover { background: #00ffaa; color: #000; }
+    .a2-btn.yellow { border-color: #ffaa00; color: #ffaa00; }
+    .a2-btn.yellow:hover { background: #ffaa00; color: #000; }
+    .a2-btn.danger { border-color: #ff003c; color: #ff003c; }
+    .a2-btn.danger:hover { background: #ff003c; color: #fff; }
+    .a2-btn.active-btn { background: var(--neon); color: #000; }
+
+    /* Timer display */
+    .a2-timer-display {
+      font-family: var(--font-heading); font-size: 2.5rem; font-weight: 900;
+      color: var(--neon); text-shadow: 0 0 20px var(--neon-glow);
+      letter-spacing: 4px; margin: 1rem 0; text-align: center;
+    }
+    .a2-timer-status {
+      font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-secondary);
+      letter-spacing: 2px; text-align: center; margin-bottom: 1rem;
+    }
+    .a2-timer-btns { display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; }
+
+    /* Answer config */
+    .a2-answer-input {
+      width: 100%; padding: 12px; background: rgba(255,26,26,0.04);
+      border: 1px solid var(--border-color); border-radius: 6px;
+      color: var(--neon); font-family: var(--font-mono); font-size: 0.9rem;
+      letter-spacing: 1px; outline: none; margin-bottom: 0.8rem;
+    }
+    .a2-answer-input:focus { border-color: var(--neon); box-shadow: 0 0 10px var(--neon-glow); }
+
+    /* Tables */
+    .a2-table { width: 100%; border-collapse: collapse; text-align: left; }
+    .a2-table th, .a2-table td {
+      padding: 10px 8px; border-bottom: 1px solid rgba(255,255,255,0.08);
+      font-family: var(--font-mono); font-size: 0.78rem;
+    }
+    .a2-table th {
+      color: var(--neon-cyan); font-size: 0.65rem; letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .a2-scroll { overflow-x: auto; max-height: 400px; overflow-y: auto; }
+
+    /* Status badges */
+    .badge {
+      display: inline-block; padding: 2px 8px; border-radius: 3px;
+      font-size: 0.65rem; letter-spacing: 1px;
+    }
+    .badge-green { background: rgba(0,255,170,0.15); color: #00ffaa; }
+    .badge-red { background: rgba(255,0,60,0.15); color: #ff003c; }
+    .badge-yellow { background: rgba(255,170,0,0.15); color: #ffaa00; }
+    .badge-dim { background: rgba(255,255,255,0.05); color: var(--text-dim); }
+
+    /* Stats row */
+    .a2-stats { display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .a2-stat-card {
+      flex: 1; min-width: 100px; background: rgba(0,0,0,0.3);
+      border: 1px solid var(--border-color); border-radius: 8px;
+      padding: 1rem; text-align: center;
+    }
+    .a2-stat-val {
+      font-family: var(--font-heading); font-size: 1.8rem; font-weight: 900;
+      color: var(--neon); text-shadow: 0 0 10px var(--neon-glow);
+    }
+    .a2-stat-lbl {
+      font-family: var(--font-mono); font-size: 0.6rem; color: var(--text-dim);
+      letter-spacing: 2px; margin-top: 0.2rem;
+    }
+
+    /* Modal */
+    .a2-modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8); z-index: 10000;
+      display: none; align-items: center; justify-content: center;
+    }
+    .a2-modal-overlay.active { display: flex; }
+    .a2-modal {
+      background: var(--bg-secondary); border: 1px solid var(--neon);
+      border-radius: 12px; padding: 2rem; max-width: 400px; width: 90%;
+      text-align: center; box-shadow: 0 0 40px var(--neon-glow);
+    }
+    .a2-modal h3 {
+      font-family: var(--font-heading); color: var(--neon);
+      letter-spacing: 2px; margin-bottom: 1rem;
+    }
+    .a2-modal p {
+      font-family: var(--font-mono); font-size: 0.85rem;
+      color: var(--text-secondary); margin-bottom: 1.5rem;
+    }
+    .a2-modal-btns { display: flex; gap: 0.8rem; justify-content: center; }
+  </style>
+</head>
+<body>
+  <div class="scanlines"></div>
+  <div class="noise"></div>
+
+  <!-- Confirmation Modal -->
+  <div class="a2-modal-overlay" id="modal-overlay">
+    <div class="a2-modal">
+      <h3 id="modal-title">CONFIRM</h3>
+      <p id="modal-text">Are you sure?</p>
+      <div class="a2-modal-btns">
+        <button class="a2-btn danger" id="modal-confirm">CONFIRM</button>
+        <button class="a2-btn" id="modal-cancel">CANCEL</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="a2-container" style="animation: fadeIn 0.8s ease;">
+    <div class="a2-header">
+      <div>
+        <h1 class="dashboard-title">ROUND 2 CONTROL</h1>
+        <p class="login-subtitle">// Admin Panel – Smart Tech Box</p>
+      </div>
+      <div class="a2-nav">
+        <a href="" id="nav-r1-admin">R1 ADMIN</a>
+        <a href="/cyberbattle.html">R3 BATTLE</a>
+        <a href="" id="nav-r4-admin">R4 ADMIN</a>
+        <a href="/round2.html">R2 TEAM VIEW</a>
+        <a href="/leaderboard.html">R2 LEADERBOARD</a>
+        <a href="/results.html">OVERALL RESULTS</a>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="a2-stats">
+      <div class="a2-stat-card">
+        <div class="a2-stat-val" id="stat-total">0</div>
+        <div class="a2-stat-lbl">TEAMS</div>
+      </div>
+      <div class="a2-stat-card">
+        <div class="a2-stat-val" id="stat-submitted">0</div>
+        <div class="a2-stat-lbl">SUBMITTED</div>
+      </div>
+      <div class="a2-stat-card">
+        <div class="a2-stat-val" id="stat-correct">0</div>
+        <div class="a2-stat-lbl">CORRECT</div>
+      </div>
+      <div class="a2-stat-card">
+        <div class="a2-stat-val" id="stat-qualified">0</div>
+        <div class="a2-stat-lbl">QUALIFIED</div>
+      </div>
+    </div>
+
+    <!-- Control Grid -->
+    <div class="a2-grid">
+      <!-- Timer Panel -->
+      <div class="a2-panel">
+        <div class="a2-panel-title">⏱ TIMER CONTROL</div>
+        <div class="a2-timer-display" id="admin-timer">45:00</div>
+        <div class="a2-timer-status" id="timer-status">WAITING</div>
+        <div class="a2-timer-btns">
+          <button class="a2-btn green" id="btn-start">▶ START</button>
+          <button class="a2-btn yellow" id="btn-pause">⏸ PAUSE</button>
+          <button class="a2-btn green" id="btn-resume" style="display:none;">▶ RESUME</button>
+          <button class="a2-btn danger" id="btn-reset">⟲ RESET</button>
+        </div>
+      </div>
+
+      <!-- Answer & Config -->
+      <div class="a2-panel">
+        <div class="a2-panel-title">🔑 CORRECT ANSWER</div>
+        <input type="text" class="a2-answer-input" id="answer-input" placeholder="Set the correct answer..." />
+        <button class="a2-btn green" id="btn-set-answer" style="width:100%;">SAVE ANSWER</button>
+        <div style="margin-top:1.5rem; border-top:1px solid var(--border-color); padding-top:1rem;">
+          <div class="a2-panel-title">⚙ CONTROLS</div>
+          <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+            <button class="a2-btn" id="btn-lock">🔒 LOCK SUBMISSIONS</button>
+            <button class="a2-btn green" id="btn-reveal">📊 REVEAL LEADERBOARD</button>
+            <button class="a2-btn danger" id="btn-reset-round">🗑 RESET ROUND</button>
+            <button class="a2-btn" id="btn-export">📄 EXPORT CSV</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Submissions -->
+    <div class="a2-panel" style="margin-bottom:1.5rem;">
+      <div class="a2-panel-title">📡 LIVE SUBMISSIONS</div>
+      <div class="a2-scroll">
+        <table class="a2-table">
+          <thead>
+            <tr>
+              <th>Rank</th><th>Team ID</th><th>Team Name</th>
+              <th>Answer</th><th>Correct</th><th>Time</th><th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="submissions-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Team Status -->
+    <div class="a2-panel">
+      <div class="a2-panel-title">👥 TEAM STATUS</div>
+      <div class="a2-scroll">
+        <table class="a2-table">
+          <thead>
+            <tr>
+              <th>Team ID</th><th>Name</th><th>Members</th>
+              <th>R2 Status</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="teams-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/admin-r2.js"></script>
+</body>
+</html>
