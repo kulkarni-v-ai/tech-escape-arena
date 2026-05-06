@@ -171,15 +171,14 @@ app.get('/api/team/:id/code', async (req, res) => {
 
 app.get('/api/adminState', async (req, res) => {
   try {
-    // Find the active round, or fall back to latest config
+    // Find the active round, or fall back to latest config (max round 4)
     let config = await RoundConfig.findOne({ status: { $in: ['running', 'paused'] } });
-    if (!config) config = await RoundConfig.findOne().sort({ roundNumber: -1 });
+    if (!config) config = await RoundConfig.findOne({ roundNumber: { $lte: 4 } }).sort({ roundNumber: -1 });
 
-    const roundNum = config?.roundNumber || 1;
+    const roundNum = Math.min(config?.roundNumber || 1, 4);
     const isPaused = config?.status === 'paused';
     const isLocked = config?.isLocked || false;
 
-    // For backward compat, calculate effective roundStartedAt accounting for pauses
     let roundStartedAt = config?.startedAt || null;
 
     res.json({ isPaused, isLocked, roundStartedAt, currentRound: roundNum });
@@ -219,7 +218,7 @@ app.post('/api/adminState', requireAuth, async (req, res) => {
         { startedAt: null, status: 'waiting', totalPausedMs: 0, pausedAt: null },
         { upsert: true }
       );
-      roundNum = updates.currentRound || roundNum + 1;
+      roundNum = Math.min(updates.currentRound || roundNum + 1, 4);
       await RoundConfig.findOneAndUpdate(
         { roundNumber: roundNum },
         { $setOnInsert: { status: 'waiting', duration: 45 * 60 * 1000 } },
