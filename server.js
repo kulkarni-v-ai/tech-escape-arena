@@ -331,8 +331,15 @@ app.post('/api/admin/import-teams', requireAuth, async (req, res) => {
 
 app.post('/api/admin/edit-team', requireAuth, async (req, res) => {
   try {
-    const { teamId, teamName, members } = req.body;
-    const team = await Team.findOneAndUpdate({ teamId }, { teamName, members }, { new: true });
+    const { teamId, teamName, members, loginCode, puzzlesSolved, score, eliminated, isQualified } = req.body;
+    const updateObj = { teamName, members };
+    if (loginCode !== undefined) updateObj.loginCode = loginCode;
+    if (puzzlesSolved !== undefined) updateObj.puzzlesSolved = parseInt(puzzlesSolved) || 0;
+    if (score !== undefined) updateObj.score = parseInt(score) || 0;
+    if (eliminated !== undefined) updateObj.eliminated = !!eliminated;
+    if (isQualified !== undefined) updateObj.isQualified = !!isQualified;
+
+    const team = await Team.findOneAndUpdate({ teamId }, updateObj, { new: true });
     if (!team) return res.status(404).json({ error: 'Team not found' });
     res.json({ success: true, team });
   } catch (err) { 

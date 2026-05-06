@@ -215,6 +215,18 @@
       resize: vertical;
       min-height: 70px;
     }
+    .modal-field-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 1.2rem;
+    }
+    .modal-field-checkbox label {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: #fff;
+      cursor: pointer;
+    }
     .modal-actions {
       display: flex;
       gap: 0.8rem;
@@ -350,6 +362,24 @@
         <div class="modal-field">
           <label for="edit-team-members">Members</label>
           <textarea id="edit-team-members" placeholder="Member names (comma separated)..."></textarea>
+        </div>
+        <div class="modal-field" style="display:flex; gap:10px;">
+          <div style="flex:1;">
+            <label for="edit-team-loginCode">Login Code</label>
+            <input type="text" id="edit-team-loginCode" autocomplete="off" />
+          </div>
+          <div style="flex:1;">
+            <label for="edit-team-score">Score</label>
+            <input type="number" id="edit-team-score" />
+          </div>
+        </div>
+        <div class="modal-field-checkbox">
+          <input type="checkbox" id="edit-team-eliminated" />
+          <label for="edit-team-eliminated">Eliminated</label>
+        </div>
+        <div class="modal-field-checkbox">
+          <input type="checkbox" id="edit-team-isQualified" />
+          <label for="edit-team-isQualified">Qualified for next round</label>
         </div>
         <div class="modal-actions">
           <button class="modal-btn-cancel" id="edit-modal-cancel">CANCEL</button>
@@ -611,6 +641,10 @@
             document.getElementById('edit-team-id').value = id;
             document.getElementById('edit-team-name').value = t.name || t.teamName || '';
             document.getElementById('edit-team-members').value = t.members || '';
+            document.getElementById('edit-team-loginCode').value = t.loginCode || '';
+            document.getElementById('edit-team-score').value = t.score || 0;
+            document.getElementById('edit-team-eliminated').checked = !!t.eliminated;
+            document.getElementById('edit-team-isQualified').checked = !!t.isQualified;
             document.getElementById('modal-edit-team').classList.add('active');
           });
         });
@@ -717,6 +751,11 @@
         const teamId = document.getElementById('edit-team-id').value;
         const teamName = document.getElementById('edit-team-name').value.trim();
         const members = document.getElementById('edit-team-members').value.trim();
+        const loginCode = document.getElementById('edit-team-loginCode').value.trim();
+        const score = document.getElementById('edit-team-score').value;
+        const eliminated = document.getElementById('edit-team-eliminated').checked;
+        const isQualified = document.getElementById('edit-team-isQualified').checked;
+
         if (!teamName) return alert('Team name cannot be empty');
 
         const btn = document.getElementById('edit-modal-submit');
@@ -727,7 +766,7 @@
           const res = await fetch('/api/admin/edit-team', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-            body: JSON.stringify({ teamId, teamName, members })
+            body: JSON.stringify({ teamId, teamName, members, loginCode, score, eliminated, isQualified })
           });
           const data = await res.json();
           if (data.success) {
