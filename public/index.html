@@ -55,7 +55,8 @@
     <div class="waiting-logo-wrapper">
       <img class="waiting-logo-img" src="assets/logo.png" alt="Tech Escape Arena" />
     </div>
-    <div class="waiting-team-badge" id="waiting-team-id">TEAM: ---</div>
+    <div class="waiting-team-badge" id="waiting-team-id">TEAM ID: ---</div>
+    <div class="waiting-team-name" id="waiting-team-name" style="color: var(--neon); font-family: var(--font-heading); font-size: 1.8rem; margin: 10px 0; letter-spacing: 3px; text-shadow: 0 0 20px var(--neon-glow); text-transform: uppercase;"></div>
     <div class="waiting-timer-display" id="waiting-timer">--:--</div>
     <div class="waiting-status">
       <div class="waiting-dots">
@@ -82,7 +83,10 @@
     </div>
 
     <h1 class="login-title">DECODE TO ENTER</h1>
-    <p class="login-subtitle" id="login-team-display">// binary transmission intercepted</p>
+    <div style="display:flex; justify-content:center; gap:1rem; margin-bottom:1rem;">
+      <p class="login-subtitle" id="login-team-display" style="margin-bottom:0;">// binary transmission intercepted</p>
+      <a href="results.html" class="btn-admin" style="text-decoration:none; font-size:0.65rem; padding:4px 12px; opacity:0.8;">📊 LIVE LEADERBOARD</a>
+    </div>
 
     <!-- Timer on login page -->
     <div class="login-timer-section">

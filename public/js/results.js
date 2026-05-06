@@ -101,7 +101,7 @@
       const cls = t.endTime ? 'status-qualified' : ((t.puzzlesSolved || 0) > 0 ? 'status-inprogress' : 'status-eliminated');
       const time = t.endTime && t.startTime ? fmtTime(t.endTime - t.startTime) : (t.startTime ? 'RUNNING' : '--:--');
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td class="rank-cell ${rankClass(rank)}">#${rank}</td><td>${t.id}</td><td>${t.name || 'Unknown'}</td><td>${t.puzzlesSolved || 0}/4</td><td>${time}</td><td class="${cls}">${status}</td>`;
+      tr.innerHTML = `<td class="rank-cell ${rankClass(rank)}">#${rank}</td><td>${t.id}</td><td>${t.teamName || t.name || '—'}</td><td>${t.puzzlesSolved || 0}/4</td><td>${time}</td><td class="${cls}">${status}</td>`;
       tbody.appendChild(tr);
     });
   }
@@ -124,7 +124,7 @@
       const statusText = cleared ? '✅ CLEARED' : (solved > 0 ? `⏳ ${solved}/4 PUZZLES` : '🔒 NOT STARTED');
       const time = t.endTime && t.startTime ? fmtTime(t.endTime - t.startTime) : (t.startTime ? 'RUNNING' : '--:--');
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td class="rank-cell ${rankClass(rank)}">#${rank}</td><td>${t.id}</td><td>${t.name || 'Unknown'}</td><td>${statusText}</td><td>${time}</td><td class="${cleared ? 'status-qualified' : 'status-eliminated'}">${cleared ? 'QUALIFIED' : 'PENDING'}</td>`;
+      tr.innerHTML = `<td class="rank-cell ${rankClass(rank)}">#${rank}</td><td>${t.id}</td><td>${t.teamName || t.name || '—'}</td><td>${statusText}</td><td>${time}</td><td class="${cleared ? 'status-qualified' : 'status-eliminated'}">${cleared ? 'QUALIFIED' : 'PENDING'}</td>`;
       tbody.appendChild(tr);
     });
   }

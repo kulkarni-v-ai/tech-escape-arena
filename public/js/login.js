@@ -359,10 +359,16 @@
 
   function initWaiting() {
     const teamBadge = document.getElementById('waiting-team-id');
+    const teamNameEl = document.getElementById('waiting-team-name');
     const waitingTimer = document.getElementById('waiting-timer');
     const waitingText = document.getElementById('waiting-text');
     
-    if (teamBadge) teamBadge.textContent = 'TEAM: ' + Storage.getTeamId();
+    if (teamBadge) teamBadge.textContent = 'TEAM ID: ' + Storage.getTeamId();
+    
+    const activeTeam = Storage.getActiveTeam();
+    if (teamNameEl && activeTeam) {
+      teamNameEl.textContent = activeTeam.name || activeTeam.teamName || '';
+    }
 
     // Spawn floating particles
     spawnWaitingParticles();

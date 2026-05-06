@@ -29,6 +29,7 @@
   // --- DOM ---
   const timerDisplay = document.getElementById('timer-display');
   const teamDisplay = document.getElementById('team-id');
+  const teamNameDisplay = document.getElementById('team-name');
   const roundLabel = document.getElementById('round-label');
   const progressFill = document.getElementById('progress-fill');
   const progressLabel = document.getElementById('progress-label');
@@ -41,7 +42,11 @@
   const congratsTime = document.getElementById('congrats-time');
 
   // --- Init ---
-  teamDisplay.textContent = 'TEAM: ' + Storage.getTeamId();
+  const currentTeam = Storage.getActiveTeam();
+  teamDisplay.textContent = 'TEAM ID: ' + Storage.getTeamId();
+  if (teamNameDisplay && currentTeam) {
+    teamNameDisplay.textContent = currentTeam.name || currentTeam.teamName || '';
+  }
 
   // Update round label from admin state
   try {
@@ -329,8 +334,9 @@
 
     const teamStart = Storage.getStartTime();
     const teamEnd = Storage.getEndTime();
+    const activeTeam = Storage.getActiveTeam();
     
-    document.getElementById('wait-team-id').textContent = Storage.getTeamId();
+    document.getElementById('wait-team-id').textContent = (activeTeam?.name || Storage.getTeamId());
     if (teamStart && teamEnd) {
       const ms = teamEnd - teamStart;
       const mins = Math.floor(ms / 60000);
