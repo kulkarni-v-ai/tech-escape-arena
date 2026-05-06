@@ -314,6 +314,7 @@
         <table class="admin-table">
           <thead>
             <tr>
+              <th style="width: 40px; text-align: center;">#</th>
               <th>Team ID</th>
               <th>Name</th>
               <th>Members</th>
@@ -658,7 +659,7 @@
         });
         console.groupEnd();
 
-        teams.forEach(t => {
+        teams.forEach((t, index) => {
           const tr = document.createElement('tr');
           let status = t.endTime ? 'Completed' : (t.startTime ? 'In Progress' : 'Not Started');
           let statusColor = t.endTime ? '#00ffaa' : (t.startTime ? '#ffaa00' : '#888');
@@ -672,6 +673,7 @@
           const loginCode = t.loginCode || '—';
       
           tr.innerHTML = `
+            <td style="text-align: center; color: var(--text-dim);">${index + 1}</td>
             <td>${t.id}</td>
             <td style="${t.eliminated ? 'color: #ff003c; text-decoration: line-through;' : ''}">${t.name || '—'}</td>
             <td style="max-width:150px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${t.members || ''}">${t.members || '—'}</td>

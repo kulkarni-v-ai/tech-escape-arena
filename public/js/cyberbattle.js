@@ -180,20 +180,20 @@
       const btnA = document.createElement('button');
       btnA.className = 'cb-ans-btn team-a' + (answerA === i ? ' locked' : '') + (answerA !== null && answerA !== i ? ' locked' : '');
       btnA.textContent = label;
-      btnA.onclick = () => { if (answerA === null) { answerA = i; renderAnswerButtons(q); checkBothAnswered(); } };
+      btnA.onclick = () => { if (answerA === null && answerB === null) { answerA = i; renderAnswerButtons(q); checkAnswered(); } };
       btnsA.appendChild(btnA);
 
       // Team B button
       const btnB = document.createElement('button');
       btnB.className = 'cb-ans-btn team-b' + (answerB === i ? ' locked' : '') + (answerB !== null && answerB !== i ? ' locked' : '');
       btnB.textContent = label;
-      btnB.onclick = () => { if (answerB === null) { answerB = i; renderAnswerButtons(q); checkBothAnswered(); } };
+      btnB.onclick = () => { if (answerB === null && answerA === null) { answerB = i; renderAnswerButtons(q); checkAnswered(); } };
       btnsB.appendChild(btnB);
     });
   }
 
-  function checkBothAnswered() {
-    if (answerA !== null && answerB !== null) {
+  function checkAnswered() {
+    if (answerA !== null || answerB !== null) {
       setTimeout(revealAnswer, 500);
     }
   }
@@ -207,8 +207,8 @@
     const match = state.bracket[state.currentMatch];
     const correct = state.currentQ.correctAnswer;
 
-    const aCorrect = state.currentQ.options[answerA] === correct;
-    const bCorrect = state.currentQ.options[answerB] === correct;
+    const aCorrect = answerA !== null && state.currentQ.options[answerA] === correct;
+    const bCorrect = answerB !== null && state.currentQ.options[answerB] === correct;
 
     if (aCorrect) { match.scoreA++; sfxCorrect(); }
     if (bCorrect) { match.scoreB++; if(!aCorrect) sfxCorrect(); }
