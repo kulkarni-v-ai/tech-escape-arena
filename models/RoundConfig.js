@@ -9,7 +9,8 @@ const roundConfigSchema = new mongoose.Schema({
   status: { type: String, enum: ['waiting', 'running', 'paused', 'ended'], default: 'waiting' },
   isLocked: { type: Boolean, default: false },
   correctAnswer: { type: String, default: '' },
-  leaderboardRevealed: { type: Boolean, default: false }
+  leaderboardRevealed: { type: Boolean, default: false },
+  selectedRound: { type: Number, default: null }
 }, { timestamps: true });
 
 // Helper: get remaining time in ms

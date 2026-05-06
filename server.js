@@ -171,14 +171,19 @@ app.get('/api/team/:id/code', async (req, res) => {
 
 app.get('/api/adminState', async (req, res) => {
   try {
-    // Find the active round, or fall back to latest config (max round 4)
+    // Check if there's a running/paused round
     let config = await RoundConfig.findOne({ status: { $in: ['running', 'paused'] } });
-    if (!config) config = await RoundConfig.findOne({ roundNumber: { $lte: 4 } }).sort({ roundNumber: -1 });
+    
+    if (!config) {
+      // No active round — use the admin's selected round (stored in a special doc)
+      const selector = await RoundConfig.findOne({ roundNumber: 0 }); // roundNumber 0 = admin selection tracker
+      const selectedRound = selector?.selectedRound || 1;
+      config = await RoundConfig.findOne({ roundNumber: selectedRound });
+    }
 
     const roundNum = Math.min(config?.roundNumber || 1, 4);
     const isPaused = config?.status === 'paused';
     const isLocked = config?.isLocked || false;
-
     let roundStartedAt = config?.startedAt || null;
 
     res.json({ isPaused, isLocked, roundStartedAt, currentRound: roundNum });
@@ -241,7 +246,13 @@ app.post('/api/adminState', requireAuth, async (req, res) => {
       }
       if (updates.isLocked !== undefined) updateObj.isLocked = updates.isLocked;
       if (updates.currentRound !== undefined) {
-        roundNum = updates.currentRound;
+        roundNum = Math.min(updates.currentRound, 4);
+        // Save the admin's selection
+        await RoundConfig.findOneAndUpdate(
+          { roundNumber: 0 },
+          { roundNumber: 0, selectedRound: roundNum },
+          { upsert: true }
+        );
         await RoundConfig.findOneAndUpdate(
           { roundNumber: roundNum },
           { $setOnInsert: { status: 'waiting', duration: 45 * 60 * 1000 } },

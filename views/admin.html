@@ -240,10 +240,21 @@
       }
       
       const ADMIN_STATE_KEY = 'tea_admin_state';
-      function getAdminState() {
-        const defaultState = { isPaused: false, isLocked: false, roundStartedAt: null, currentRound: 1 };
-        const val = localStorage.getItem(ADMIN_STATE_KEY);
-        return val ? { ...defaultState, ...JSON.parse(val) } : defaultState;
+      let cachedState = { isPaused: false, isLocked: false, roundStartedAt: null, currentRound: 1 };
+
+      function getAdminState() { return cachedState; }
+
+      async function syncAdminState() {
+        try {
+          const res = await fetch('/api/adminState', { headers: { 'Authorization': 'Bearer ' + token } });
+          const data = await res.json();
+          cachedState = { ...cachedState, ...data };
+          localStorage.setItem(ADMIN_STATE_KEY, JSON.stringify(cachedState));
+        } catch(e) {
+          // Fallback to localStorage
+          const val = localStorage.getItem(ADMIN_STATE_KEY);
+          if (val) cachedState = { ...cachedState, ...JSON.parse(val) };
+        }
       }
 
       // Convert text to binary
@@ -257,8 +268,9 @@
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
             body: JSON.stringify(payload)
         });
-        // Re-sync immediately
-        setTimeout(() => { updateAdminUI(); }, 300);
+        // Re-sync from server
+        await syncAdminState();
+        updateAdminUI();
       }
       
       function updateAdminUI() {
@@ -465,11 +477,15 @@
         a.click(); window.URL.revokeObjectURL(url);
       });
       
-      updateAdminUI();
-      renderTable();
-      updateTimer();
+      // Initial sync from server, then render
+      syncAdminState().then(() => {
+        updateAdminUI();
+        renderTable();
+        updateTimer();
+      });
 
-      setInterval(() => {
+      setInterval(async () => {
+        await syncAdminState();
         renderTable();
         updateTimer();
         updateAdminUI();
