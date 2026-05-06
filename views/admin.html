@@ -270,9 +270,11 @@
 
   <div class="admin-container">
     <div class="admin-header">
-      <div>
-        <h1 class="dashboard-title">SYSTEM OVERSEER</h1>
-        <p class="login-subtitle">// Admin Privileges Active</p>
+      <div class="dashboard-header-main" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem;">
+        <div>
+          <h1 class="dashboard-title">ROUND 1 OVERSEER</h1>
+          <p class="login-subtitle">// Admin Privileges Active</p>
+        </div>
       </div>
       <div class="admin-controls">
         <button class="btn-admin" id="btn-start-round">Start Round</button>
@@ -290,18 +292,12 @@
       </div>
     </div>
 
-    <!-- Round Selector -->
+    <!-- Round Status -->
     <div class="round-status-bar" style="flex-direction:column; align-items:stretch; gap:1rem;">
       <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.8rem;">
         <div class="round-indicator" id="round-indicator">ROUND 1</div>
         <div class="round-timer not-started" id="admin-timer">NOT STARTED</div>
         <div class="team-count" id="team-count">0 teams registered</div>
-      </div>
-      <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
-        <button class="btn-admin round-select-btn active" data-round="1" style="flex:1; text-align:center;">ROUND 1</button>
-        <button class="btn-admin round-select-btn" data-round="2" style="flex:1; text-align:center;">ROUND 2</button>
-        <button class="btn-admin round-select-btn" data-round="3" style="flex:1; text-align:center;">ROUND 3</button>
-        <button class="btn-admin round-select-btn" data-round="4" style="flex:1; text-align:center;">ROUND 4</button>
       </div>
     </div>
 
