@@ -77,9 +77,10 @@
     const container = document.getElementById('setup-matches');
     container.innerHTML = '';
 
-    // Get all registered teams from Storage
+    // Get all registered teams from Storage - filter for Qualified teams only
     const allTeams = Storage.getAllTeams();
     const teamNames = Object.values(allTeams)
+      .filter(t => t.isQualified === true)
       .map(t => t.name || t.teamName)
       .filter(Boolean)
       .sort((a, b) => a.localeCompare(b));
