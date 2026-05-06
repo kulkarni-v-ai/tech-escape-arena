@@ -117,7 +117,7 @@ app.post('/api/register', async (req, res) => {
     await Team.findOneAndUpdate(
       { teamId: id },
       {
-        teamId: id, teamName: name, members, loginCode,
+        id: id, teamId: id, teamName: name, members, loginCode,
         startTime: config?.startedAt || null, endTime: null,
         puzzlesSolved: 0, puzzleAnswers: {}, puzzleAttempts: {},
         loginAttempts: 0, loggedIn: false, isQualified: false,
@@ -317,7 +317,7 @@ app.post('/api/admin/import-teams', requireAuth, async (req, res) => {
       const loginCode = await generateLoginCode();
       await Team.findOneAndUpdate(
         { teamId },
-        { teamId, teamName: t.teamName || '', members: t.members || '', loginCode, currentRound: 1, eliminated: false, score: 0 },
+        { id: teamId, teamId, teamName: t.teamName || '', members: t.members || '', loginCode, currentRound: 1, eliminated: false, score: 0 },
         { upsert: true, new: true }
       );
       results.push(teamId);
