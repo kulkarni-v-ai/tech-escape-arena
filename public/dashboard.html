@@ -65,6 +65,49 @@
       <div class="puzzle-feedback" id="final-feedback"></div>
     </div>
 
+    <!-- Waiting for Round 2 Overlay -->
+    <div id="r1-complete-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(5,5,15,0.97); z-index:9999; overflow-y:auto;">
+      <div style="max-width:800px; margin:3rem auto; padding:2rem; text-align:center;">
+        <div style="font-family:var(--font-heading); font-size:clamp(1.5rem,4vw,2.5rem); color:var(--neon); text-shadow:0 0 30px var(--neon-glow); margin-bottom:1rem; animation:pulse 2s ease infinite alternate;">
+          ✅ ROUND 1 COMPLETE
+        </div>
+        <div style="font-family:var(--font-mono); color:var(--text-secondary); font-size:0.9rem; margin-bottom:0.5rem;">
+          Your escape code has been recorded.
+        </div>
+        <div style="font-family:var(--font-heading); font-size:1.2rem; color:var(--neon-cyan); margin-bottom:2rem;">
+          TEAM: <span id="wait-team-id"></span> · TIME: <span id="wait-time"></span>
+        </div>
+
+        <div style="background:rgba(255,26,26,0.08); border:1px solid rgba(255,26,26,0.3); border-radius:12px; padding:2rem; margin-bottom:2rem;">
+          <div style="font-family:var(--font-heading); font-size:1rem; color:#ffaa00; letter-spacing:3px; margin-bottom:1rem; animation:pulse 1.5s ease infinite alternate;">
+            ⏳ WAITING FOR ROUND 2...
+          </div>
+          <div style="font-family:var(--font-mono); color:var(--text-dim); font-size:0.75rem;">
+            The admin will start the next round shortly. Stay on this page.
+          </div>
+        </div>
+
+        <!-- Live Mini Leaderboard -->
+        <div style="text-align:left;">
+          <div style="font-family:var(--font-heading); font-size:0.8rem; color:var(--neon-cyan); letter-spacing:2px; margin-bottom:1rem;">📊 ROUND 1 LEADERBOARD</div>
+          <div style="overflow-x:auto;">
+            <table class="results-table" style="width:100%;border-collapse:collapse;text-align:left;">
+              <thead>
+                <tr>
+                  <th style="padding:8px;color:var(--neon-cyan);font-family:var(--font-mono);font-size:0.7rem;border-bottom:1px solid rgba(255,26,26,0.2);">Rank</th>
+                  <th style="padding:8px;color:var(--neon-cyan);font-family:var(--font-mono);font-size:0.7rem;border-bottom:1px solid rgba(255,26,26,0.2);">Team</th>
+                  <th style="padding:8px;color:var(--neon-cyan);font-family:var(--font-mono);font-size:0.7rem;border-bottom:1px solid rgba(255,26,26,0.2);">Puzzles</th>
+                  <th style="padding:8px;color:var(--neon-cyan);font-family:var(--font-mono);font-size:0.7rem;border-bottom:1px solid rgba(255,26,26,0.2);">Time</th>
+                  <th style="padding:8px;color:var(--neon-cyan);font-family:var(--font-mono);font-size:0.7rem;border-bottom:1px solid rgba(255,26,26,0.2);">Status</th>
+                </tr>
+              </thead>
+              <tbody id="wait-leaderboard"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <!-- Scripts (order matters) -->

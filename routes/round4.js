@@ -49,7 +49,12 @@ router.get('/progress/:teamId', async (req, res) => {
     if (!progress) {
       const team = await Team.findOne({ teamId });
       if (!team) return res.status(404).json({ error: 'Team not found' });
+      if (team.eliminated) return res.status(403).json({ error: 'ACCESS DENIED: Team has been eliminated.' });
       progress = await Round4Progress.create({ teamId, teamName: team.teamName });
+    } else {
+      // Also verify if the team is eliminated even if progress exists
+      const team = await Team.findOne({ teamId });
+      if (team && team.eliminated) return res.status(403).json({ error: 'ACCESS DENIED: Team has been eliminated.' });
     }
     const config = await getR4Config();
     const meta = parseConfigMeta(config);
@@ -81,6 +86,10 @@ router.post('/submit-stage', async (req, res) => {
     let progress = await Round4Progress.findOne({ teamId });
     if (!progress) return res.status(404).json({ error: 'Team not registered for Round 4' });
     if (progress.disqualified) return res.status(403).json({ error: 'Team disqualified' });
+    
+    const team = await Team.findOne({ teamId });
+    if (team && team.eliminated) return res.status(403).json({ error: 'Team eliminated' });
+
     if (progress.completed) return res.status(409).json({ error: 'Already completed all stages' });
     if (progress.currentStage !== stage) return res.status(403).json({ error: `You are on stage ${progress.currentStage}, not stage ${stage}` });
 
@@ -129,6 +138,10 @@ router.post('/submit-final', upload.single('image'), async (req, res) => {
     let progress = await Round4Progress.findOne({ teamId });
     if (!progress) return res.status(404).json({ error: 'Team not found' });
     if (progress.disqualified) return res.status(403).json({ error: 'Team disqualified' });
+
+    const team = await Team.findOne({ teamId });
+    if (team && team.eliminated) return res.status(403).json({ error: 'Team eliminated' });
+
     if (progress.currentStage < 4) return res.status(403).json({ error: 'Complete all previous stages first' });
 
     // Check duplicate

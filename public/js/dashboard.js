@@ -313,12 +313,76 @@
       playVictorySound();
 
       setTimeout(() => {
-        window.location.href = 'results.html';
+        showWaitOverlay();
       }, 2500);
     } else {
       finalFeedback.textContent = '❌ Incorrect code. Format: ANSWER1-ANSWER2-ANSWER3-ANSWER4';
       finalFeedback.className = 'puzzle-feedback error';
     }
+  }
+
+  // --- Wait Overlay ---
+  function showWaitOverlay() {
+    const overlay = document.getElementById('r1-complete-overlay');
+    if (!overlay) return;
+    overlay.style.display = 'block';
+
+    const teamStart = Storage.getStartTime();
+    const teamEnd = Storage.getEndTime();
+    
+    document.getElementById('wait-team-id').textContent = Storage.getTeamId();
+    if (teamStart && teamEnd) {
+      const ms = teamEnd - teamStart;
+      const mins = Math.floor(ms / 60000);
+      const secs = Math.floor((ms % 60000) / 1000);
+      document.getElementById('wait-time').textContent = String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+    }
+
+    // Refresh leaderboard
+    updateWaitLeaderboard();
+    setInterval(updateWaitLeaderboard, 3000);
+  }
+
+  function updateWaitLeaderboard() {
+    const tbody = document.getElementById('wait-leaderboard');
+    if (!tbody) return;
+
+    const allTeams = Object.values(Storage.getAllTeams());
+    allTeams.sort((a, b) => {
+      const aS = (a.puzzlesSolved || 0);
+      const bS = (b.puzzlesSolved || 0);
+      if (bS !== aS) return bS - aS;
+      const tA = a.endTime ? (a.endTime - a.startTime) : Infinity;
+      const tB = b.endTime ? (b.endTime - b.startTime) : Infinity;
+      return tA - tB;
+    });
+
+    tbody.innerHTML = '';
+    allTeams.forEach((t, i) => {
+      const rank = i + 1;
+      const solved = t.puzzlesSolved || 0;
+      const cleared = solved >= TOTAL_PUZZLES;
+      const statusText = cleared ? '✅ CLEARED' : (solved > 0 ? `⏳ ${solved}/${TOTAL_PUZZLES} PUZZLES` : '🔒 PENDING');
+      
+      let timeStr = '--:--';
+      if (t.endTime && t.startTime) {
+        const ms = t.endTime - t.startTime;
+        timeStr = String(Math.floor(ms/60000)).padStart(2,'0') + ':' + String(Math.floor((ms%60000)/1000)).padStart(2,'0');
+      } else if (t.startTime) {
+        timeStr = 'RUNNING';
+      }
+
+      const tr = document.createElement('tr');
+      tr.style.borderBottom = '1px solid rgba(255,26,26,0.1)';
+      tr.innerHTML = `
+        <td style="padding:8px;font-family:var(--font-mono);font-size:0.8rem;color:${rank===1?'#FFD700':rank===2?'#C0C0C0':rank===3?'#CD7F32':'var(--text-primary)'}">#${rank}</td>
+        <td style="padding:8px;font-family:var(--font-mono);font-size:0.8rem;color:var(--text-primary)">${t.id}</td>
+        <td style="padding:8px;font-family:var(--font-mono);font-size:0.8rem;color:var(--text-secondary)">${solved}/${TOTAL_PUZZLES}</td>
+        <td style="padding:8px;font-family:var(--font-mono);font-size:0.8rem;color:var(--text-secondary)">${timeStr}</td>
+        <td style="padding:8px;font-family:var(--font-mono);font-size:0.8rem;color:${cleared?'#00ffaa':(solved>0?'#ffaa00':'var(--neon)')}">${statusText}</td>
+      `;
+      tbody.appendChild(tr);
+    });
   }
 
   // --- Sound Effects ---
@@ -418,5 +482,31 @@
   document.head.appendChild(shakeStyle);
 
   // --- Init ---
+  const activeTeam = Storage.getActiveTeam();
+  if (activeTeam && activeTeam.eliminated) {
+    document.body.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:#000;color:#ff003c;font-family:'Courier New', monospace;text-align:center;">
+        <h1 style="font-size:3rem;text-shadow:0 0 10px #ff003c;letter-spacing:5px;">ELIMINATED</h1>
+        <p style="font-size:1.2rem;color:#888;">Your squad has been disconnected from the arena.</p>
+        <button style="margin-top:20px;padding:10px 20px;background:transparent;border:1px solid #ff003c;color:#ff003c;cursor:pointer;" onclick="Storage.resetAll();window.location.href='index.html';">DISCONNECT</button>
+      </div>
+    `;
+    return;
+  }
+
   renderPuzzles();
+
+  // If already complete, show overlay immediately
+  if (puzzlesSolved >= TOTAL_PUZZLES && Storage.getEndTime()) {
+    showWaitOverlay();
+  }
+
+  // Periodic check for elimination
+  setInterval(() => {
+    const t = Storage.getActiveTeam();
+    if (t && t.eliminated) {
+      window.location.reload(); // Will hit the block above
+    }
+  }, 5000);
+
 })();

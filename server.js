@@ -98,7 +98,7 @@ app.get('/api/teams', async (req, res) => {
   try {
     const teams = await Team.find().lean();
     const teamsObj = {};
-    teams.forEach(t => { teamsObj[t.teamId] = { ...t, id: t.teamId }; });
+    teams.forEach(t => { teamsObj[t.teamId] = { ...t, id: t.teamId, name: t.teamName }; });
     res.json(teamsObj);
   } catch (err) {
     console.error('GET /api/teams error:', err.message);
@@ -268,7 +268,7 @@ app.post('/api/adminState', requireAuth, async (req, res) => {
     const finalConfig = await RoundConfig.findOne({ roundNumber: roundNum });
     const teams = await Team.find().lean();
     const teamsObj = {};
-    teams.forEach(t => { teamsObj[t.teamId] = { ...t, id: t.teamId }; });
+    teams.forEach(t => { teamsObj[t.teamId] = { ...t, id: t.teamId, name: t.teamName }; });
 
     res.json({
       adminState: {

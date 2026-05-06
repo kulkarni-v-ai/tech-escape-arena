@@ -187,7 +187,13 @@
     </div>
 
     <div>
-      <h2 style="color: var(--text-primary); font-family: var(--font-heading); margin-bottom: 1rem; font-size: 1rem; letter-spacing: 2px;">Active Squads</h2>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <h2 style="color: var(--text-primary); font-family: var(--font-heading); font-size: 1rem; letter-spacing: 2px;">Active Squads</h2>
+        <div style="display:flex; gap:0.5rem;">
+          <input type="text" id="new-team-name" placeholder="Team Name..." style="background:rgba(0,0,0,0.5); border:1px solid var(--border-color); color:#fff; padding:5px 10px; font-family:var(--font-mono); font-size:0.8rem; border-radius:4px;" />
+          <button class="btn-admin" id="btn-add-team" style="font-size:0.75rem; padding:5px 15px;">Add Team</button>
+        </div>
+      </div>
       <div class="table-scroll">
         <table class="admin-table">
           <thead>
@@ -432,36 +438,125 @@
       
           tr.innerHTML = `
             <td>${t.id}</td>
-            <td>${t.name || '—'}</td>
+            <td class="edit-team-name" data-id="${t.id}" style="cursor:pointer; text-decoration:underline; ${t.eliminated ? 'color: #ff003c; text-decoration: line-through;' : ''}" title="Click to edit name">${t.name || '—'}</td>
             <td style="max-width:150px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${t.members || ''}">${t.members || '—'}</td>
             <td class="login-code-cell">${loginCode}</td>
             <td>
               <input type="number" class="override-input" data-id="${t.id}" value="${t.puzzlesSolved || 0}" min="0" max="4" />
             </td>
-            <td style="color:${statusColor};">${status}</td>
+            <td style="color:${statusColor};">${t.eliminated ? '<span style="color:#ff003c;font-weight:bold;">ELIMINATED</span>' : status}</td>
             <td><small style="color:var(--neon-cyan); font-size:0.7rem;">${ansText}</small></td>
-            <td>
+            <td style="display:flex; gap: 5px;">
               <button class="btn-admin update-btn" data-id="${t.id}" style="font-size:0.7rem; padding:4px 10px;">Update</button>
+              <button class="btn-admin eliminate-btn" data-id="${t.id}" style="font-size:0.7rem; padding:4px 10px; border-color:#ffaa00; color:#ffaa00;">
+                ${t.eliminated ? 'Restore' : 'Eliminate'}
+              </button>
+              <button class="btn-admin delete-btn" data-id="${t.id}" style="font-size:0.7rem; padding:4px 10px; border-color:#ff003c; color:#ff003c;">Delete</button>
             </td>
           `;
           tbody.appendChild(tr);
+        });
+      
+        // Edit Team Name logic
+        document.querySelectorAll('.edit-team-name').forEach(td => {
+          td.addEventListener('click', async (e) => {
+            const id = e.target.getAttribute('data-id');
+            const allTeams = Storage.getAllTeams();
+            const t = allTeams[id];
+            if (!t) return;
+            const newName = prompt(\`Enter new name for Team \${id}:\`, t.name);
+            if (newName && newName.trim() !== '' && newName !== t.name) {
+              t.name = newName.trim();
+              Storage.saveAllTeams(allTeams);
+              await pushAllTeams(allTeams);
+              renderTable();
+            }
+          });
         });
       
         document.querySelectorAll('.update-btn').forEach(btn => {
           btn.addEventListener('click', async (e) => {
             const id = e.target.getAttribute('data-id');
             const input = document.querySelector(`.override-input[data-id="${id}"]`);
-            const newVal = parseInt(input.value, 10);
-            if (!isNaN(newVal) && newVal >= 0 && newVal <= 4) {
-              const allTeams = Storage.getAllTeams();
-              allTeams[id].puzzlesSolved = newVal;
+            const val = parseInt(input.value);
+            
+            const allTeams = Storage.getAllTeams();
+            if (allTeams[id]) {
+              allTeams[id].puzzlesSolved = val;
               Storage.saveAllTeams(allTeams);
-              e.target.textContent = 'Saving...';
               await pushAllTeams(allTeams);
-              e.target.textContent = 'Saved!';
-              setTimeout(() => { e.target.textContent = 'Update'; renderTable(); }, 1000);
+              renderTable();
             }
           });
+        });
+
+        document.querySelectorAll('.eliminate-btn').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const id = e.target.getAttribute('data-id');
+            const allTeams = Storage.getAllTeams();
+            if (allTeams[id]) {
+              allTeams[id].eliminated = !allTeams[id].eliminated;
+              Storage.saveAllTeams(allTeams);
+              await pushAllTeams(allTeams);
+              renderTable();
+            }
+          });
+        });
+
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const id = e.target.getAttribute('data-id');
+            if (confirm(`Are you sure you want to completely DELETE team ${id}? This cannot be undone.`)) {
+              try {
+                await fetch('/api/admin/delete-team', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                  body: JSON.stringify({ teamId: id })
+                });
+                await Storage.syncWithServer();
+                renderTable();
+              } catch(err) {
+                alert('Failed to delete team');
+              }
+            }
+          });
+        });
+      }
+
+      // Add Team Logic
+      const btnAddTeam = document.getElementById('btn-add-team');
+      const inputNewTeamName = document.getElementById('new-team-name');
+      if (btnAddTeam && inputNewTeamName) {
+        btnAddTeam.addEventListener('click', async () => {
+          const name = inputNewTeamName.value.trim();
+          if (!name) return alert('Enter a team name');
+          
+          btnAddTeam.disabled = true;
+          btnAddTeam.textContent = 'Adding...';
+
+          try {
+            const res = await fetch('/api/admin/import-teams', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+              body: JSON.stringify({
+                teams: [{ teamName: name, members: '' }]
+              })
+            });
+            const data = await res.json();
+            if (data.success) {
+              inputNewTeamName.value = '';
+              // Sync and re-render
+              await Storage.syncWithServer();
+              renderTable();
+            } else {
+              alert('Failed to add team: ' + data.error);
+            }
+          } catch(err) {
+            alert('Network error while adding team');
+          } finally {
+            btnAddTeam.disabled = false;
+            btnAddTeam.textContent = 'Add Team';
+          }
         });
       }
       

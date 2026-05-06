@@ -33,6 +33,7 @@ router.post('/submit', async (req, res) => {
     // Check team exists
     const team = await Team.findOne({ teamId });
     if (!team) return res.status(404).json({ error: 'Team not found' });
+    if (team.eliminated) return res.status(403).json({ error: 'ACCESS DENIED: Team has been eliminated.' });
 
     // Check if already submitted
     const existing = await Round2Submission.findOne({ teamId });

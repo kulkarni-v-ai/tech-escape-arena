@@ -33,23 +33,19 @@
     <p class="access-text" id="access-text">ACCESS LOCKED</p>
   </div>
 
-  <!-- Registration View -->
-  <div id="registration-view" class="view-section login-container">
-    <div class="login-logo">
-      <img src="assets/logo.png" alt="Tech Escape Arena" style="width: 140px;" />
-    </div>
-    <h1 class="login-title" style="font-size: 2rem;">TEAM REGISTRATION</h1>
-    <p class="login-subtitle">// initialize new protocol</p>
-    <div class="login-box">
+  <!-- Registration / Team Login View -->
+  <div id="registration-view" class="view-section auth-container">
+    <div class="auth-box">
+      <div class="auth-header">
+        <h2 class="auth-title">SYSTEM UPLINK</h2>
+        <div class="auth-line"></div>
+      </div>
+      <p class="auth-subtitle">IDENTIFY YOUR SQUAD</p>
       <div class="input-group">
         <label for="reg-team-name">Team Name</label>
-        <input type="text" id="reg-team-name" placeholder="Enter team name..." autocomplete="off" spellcheck="false" />
+        <input type="text" id="reg-team-name" placeholder="Enter assigned team name..." autocomplete="off" spellcheck="false" />
       </div>
-      <div class="input-group">
-        <label for="reg-members">Members (comma separated)</label>
-        <input type="text" id="reg-members" placeholder="Alice, Bob, Charlie..." autocomplete="off" spellcheck="false" />
-      </div>
-      <button class="btn-primary" id="btn-register">REGISTER TEAM</button>
+      <button class="btn-primary" id="btn-register">CONNECT</button>
       <p class="error-message" id="reg-error-msg"></p>
     </div>
   </div>

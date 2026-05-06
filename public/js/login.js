@@ -286,28 +286,69 @@
   // --- Registration Logic ---
   const regBtn = document.getElementById('btn-register');
   const regName = document.getElementById('reg-team-name');
-  const regMembers = document.getElementById('reg-members');
   const regError = document.getElementById('reg-error-msg');
 
   if (regBtn) {
     regBtn.addEventListener('click', handleRegistration);
   }
 
-  function handleRegistration() {
+  async function handleRegistration() {
     const name = regName.value.trim();
-    const members = regMembers.value.trim();
 
-    if (!name || !members) {
-      regError.textContent = 'Please fill in all fields.';
+    if (!name) {
+      regError.textContent = 'Please enter your team name.';
       return;
     }
 
-    const newTeamId = Storage.registerTeam(name, members);
-    Storage.setTeamId(newTeamId);
-    
-    // Go to waiting lobby
-    showView('waiting');
-    initWaiting();
+    regError.textContent = 'Authenticating...';
+    regError.style.color = '#ffaa00';
+
+    try {
+      // Fetch latest teams from server to ensure we have all of them
+      const res = await fetch('/api/teams');
+      if (res.ok) {
+        const serverTeams = await res.json();
+        Storage.saveAllTeams(serverTeams);
+        
+        // Find team by case-insensitive name
+        const targetName = name.toLowerCase();
+        let foundTeamId = null;
+        
+        for (const [id, team] of Object.entries(serverTeams)) {
+          if (team.name && team.name.toLowerCase() === targetName) {
+            foundTeamId = id;
+            if (team.eliminated) {
+              regError.textContent = 'ACCESS DENIED: Squad has been eliminated from the arena.';
+              regError.style.color = '#ff003c';
+              return;
+            }
+            break;
+          }
+        }
+        
+        if (foundTeamId) {
+          Storage.setTeamId(foundTeamId);
+          regError.textContent = '';
+          
+          // If team is already logged in, skip straight to dashboard
+          if (Storage.isLoggedIn()) {
+             window.location.href = 'dashboard.html';
+             return;
+          }
+          
+          enterWaitingOrLogin();
+        } else {
+          regError.textContent = 'Team not found. Check spelling or contact admin.';
+          regError.style.color = '#ff003c';
+        }
+      } else {
+        regError.textContent = 'Server error. Please try again.';
+        regError.style.color = '#ff003c';
+      }
+    } catch(e) {
+      regError.textContent = 'Connection error. Please try again.';
+      regError.style.color = '#ff003c';
+    }
   }
 
   // ==========================
