@@ -123,7 +123,7 @@ app.post('/api/register', async (req, res) => {
         loginAttempts: 0, loggedIn: false, isQualified: false,
         currentRound: 1, eliminated: false, score: 0
       },
-      { upsert: true, new: true }
+      { upsert: true, returnDocument: 'after' }
     );
     res.json({ id, loginCode });
   } catch (err) {
@@ -135,7 +135,7 @@ app.post('/api/register', async (req, res) => {
 app.post('/api/team/:id/update', async (req, res) => {
   try {
     const { id } = req.params;
-    const team = await Team.findOneAndUpdate({ teamId: id }, req.body, { new: true });
+    const team = await Team.findOneAndUpdate({ teamId: id }, req.body, { returnDocument: 'after' });
     if (!team) return res.status(404).json({ error: 'Team not found' });
     res.json({ success: true, team: { ...team.toObject(), id: team.teamId } });
   } catch (err) {
@@ -318,7 +318,7 @@ app.post('/api/admin/import-teams', requireAuth, async (req, res) => {
       await Team.findOneAndUpdate(
         { teamId },
         { teamId, teamName: t.teamName || '', members: t.members || '', loginCode, currentRound: 1, eliminated: false, score: 0 },
-        { upsert: true, new: true }
+        { upsert: true, returnDocument: 'after' }
       );
       results.push(teamId);
     }
@@ -339,7 +339,7 @@ app.post('/api/admin/edit-team', requireAuth, async (req, res) => {
     if (eliminated !== undefined) updateObj.eliminated = !!eliminated;
     if (isQualified !== undefined) updateObj.isQualified = !!isQualified;
 
-    const team = await Team.findOneAndUpdate({ teamId }, updateObj, { new: true });
+    const team = await Team.findOneAndUpdate({ teamId }, updateObj, { returnDocument: 'after' });
     if (!team) return res.status(404).json({ error: 'Team not found' });
     res.json({ success: true, team });
   } catch (err) { 
