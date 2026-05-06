@@ -363,11 +363,14 @@
     const waitingTimer = document.getElementById('waiting-timer');
     const waitingText = document.getElementById('waiting-text');
     
-    if (teamBadge) teamBadge.textContent = 'TEAM ID: ' + Storage.getTeamId();
-    
     const activeTeam = Storage.getActiveTeam();
+    if (teamBadge) {
+      const name = activeTeam?.name || activeTeam?.teamName;
+      teamBadge.textContent = name ? `TEAM: ${name}` : `TEAM: ${Storage.getTeamId()}`;
+    }
+    
     if (teamNameEl && activeTeam) {
-      teamNameEl.textContent = activeTeam.name || activeTeam.teamName || '';
+      teamNameEl.textContent = (activeTeam.name || activeTeam.teamName || '').toUpperCase();
     }
 
     // Spawn floating particles
