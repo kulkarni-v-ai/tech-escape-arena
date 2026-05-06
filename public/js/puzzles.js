@@ -116,11 +116,46 @@ function getPuzzlesForTeam(teamId) {
   const row3result = (p2a3 * p2a3) + p2b3;
   const p2Answer = String((p2a4 * p2a4) + p2b4);
 
-  // --- Puzzle 3: QR Code ---
-  const qrWord = TECH_WORDS[(idx + 15) % 40];
+  // --- Puzzle 3: Hex Dump Decoder (replaces trivial QR) ---
+  const hexWord = TECH_WORDS[(idx + 15) % 40];
+  // Convert word to hex bytes with noise bytes injected
+  const hexBytes = [];
+  const noiseByte = () => Math.floor(Math.random() * 256).toString(16).padStart(2, '0').toUpperCase();
+  // Seed the noise RNG deterministically
+  let nSeed = hash;
+  const detNoise = () => { nSeed = (nSeed * 1103515245 + 12345) & 0x7fffffff; return (nSeed % 256).toString(16).padStart(2, '0').toUpperCase(); };
+  // Build hex dump: real bytes at positions divisible by 3 (0,3,6,9...), noise elsewhere
+  const allHex = [];
+  let realIdx = 0;
+  for (let i = 0; i < hexWord.length * 3; i++) {
+    if (i % 3 === 0 && realIdx < hexWord.length) {
+      allHex.push(hexWord.charCodeAt(realIdx).toString(16).padStart(2, '0').toUpperCase());
+      realIdx++;
+    } else {
+      allHex.push(detNoise());
+    }
+  }
+  // Format as hex dump rows (8 bytes per row)
+  let hexDump = '';
+  for (let i = 0; i < allHex.length; i += 8) {
+    const addr = (i).toString(16).padStart(4, '0').toUpperCase();
+    const row = allHex.slice(i, i + 8).join(' ');
+    hexDump += `0x${addr}: ${row}\n`;
+  }
 
-  // --- Puzzle 4: Riddle ---
+  // --- Puzzle 4: Cipher Chain (riddle answer becomes Vigenère key) ---
   const riddle = RIDDLES[idx];
+  // Vigenère encrypt a hidden confirmation word
+  const confirmWord = TECH_WORDS[(idx + 25) % 40];
+  const vKey = riddle.a.toUpperCase().replace(/[^A-Z]/g, '');
+  let vEncrypted = '';
+  let keyIdx = 0;
+  for (let i = 0; i < confirmWord.length; i++) {
+    const c = confirmWord.charCodeAt(i) - 65;
+    const k = vKey.charCodeAt(keyIdx % vKey.length) - 65;
+    vEncrypted += String.fromCharCode(((c + k) % 26) + 65);
+    keyIdx++;
+  }
 
   const puzzles = [
     {
@@ -165,35 +200,55 @@ function getPuzzlesForTeam(teamId) {
     },
     {
       id: 3,
-      title: 'Visual Data Link',
-      difficulty: 'HARDER',
-      description: 'Scan the visual data link. Ensure your scanner translates it carefully.',
-      challenge: 'Decode the image.',
+      title: 'Memory Hex Dump',
+      difficulty: 'EXPERT',
+      description: 'A corrupted memory dump was intercepted. Extract the hidden keyword by reading ONLY every 3rd byte (positions 0, 3, 6, 9...) and converting from hex to ASCII.',
+      challenge: 'Extract the signal from the noise.',
       customHtml: `
-        <div style="text-align:center; margin-bottom:15px; display:flex; justify-content:center;">
-          <div id="qr-code-payload" data-qr="${qrWord}" style="padding:10px; background:#fff; border-radius:4px; box-shadow:0 0 15px rgba(255,255,255,0.2);"></div>
+        <div style="background:rgba(0,0,0,0.6); border:1px solid rgba(0,255,170,0.2); border-radius:8px; padding:1.2rem; margin-bottom:1rem; font-family:var(--font-mono); font-size:0.85rem; line-height:1.8;">
+          <div style="color:var(--neon-cyan); margin-bottom:0.8rem; font-weight:bold; font-size:0.7rem; letter-spacing:2px;">📦 MEMORY DUMP – SECTOR ${(hash % 99).toString().padStart(2,'0')}</div>
+          <pre style="color:#00ffaa; margin:0; white-space:pre-wrap; word-break:break-all;">${hexDump}</pre>
+          <div style="margin-top:0.8rem; border-top:1px solid rgba(255,26,26,0.2); padding-top:0.8rem;">
+            <div style="color:var(--text-dim); font-size:0.7rem; line-height:1.6;">
+              <span style="color:#ff6b3d;">⚠ INSTRUCTIONS:</span> Bytes are indexed 0,1,2,3,4,5... per row.<br/>
+              Read ONLY bytes at positions <span style="color:var(--neon);">0, 3, 6, 9, 12...</span> (every 3rd, starting from 0).<br/>
+              Convert those hex values to ASCII characters.<br/>
+              <span style="color:var(--text-dim); font-style:italic;">// Tip: 0x41='A', 0x42='B', ... 0x5A='Z'</span>
+            </div>
+          </div>
         </div>
       `,
-      hintText: 'A standard QR Code reader app or your phone camera can scan this.',
-      answer: qrWord,
-      hint: `The QR code contains the word "${qrWord}".`,
+      hintText: 'Take byte at position 0, skip 2, take byte at position 3, skip 2, etc. Convert each hex to its ASCII letter (e.g. 53 = S).',
+      answer: hexWord,
+      hint: `The hidden word starts with "${hexWord.substring(0,2)}..."`,
       validate(input) { return input.trim().toUpperCase() === this.answer; }
     },
     {
       id: 4,
-      title: 'Final Enigma',
+      title: 'Cipher Chain Enigma',
       difficulty: 'FINAL',
-      description: 'Solve the riddle to obtain the final access code.',
-      challenge: `"${riddle.q}"`,
-      customHtml: '',
-      hintText: 'Read carefully, it is a classic riddle.',
-      answer: riddle.a,
-      hint: `The answer is ${riddle.a}.`,
-      validate(input) { return input.trim().toUpperCase() === this.answer || input.trim().toUpperCase() === ("A " + this.answer); }
+      description: 'Two-step challenge: First solve the riddle to find the KEY. Then use that key to Vigenère-decrypt the ciphertext below.',
+      challenge: `Ciphertext: ${vEncrypted}`,
+      customHtml: `
+        <div style="background:rgba(0,0,0,0.5); border:1px solid rgba(255,26,26,0.2); border-radius:8px; padding:1.2rem; margin-bottom:1rem; font-family:var(--font-mono); font-size:0.82rem; line-height:1.8;">
+          <div style="color:#ff6b3d; font-weight:bold; margin-bottom:0.8rem; font-size:0.7rem; letter-spacing:2px;">STEP 1 — RIDDLE (find the key):</div>
+          <div style="color:var(--text-primary); font-style:italic; font-size:0.95rem; margin-bottom:1rem; padding:0.8rem; border-left:2px solid var(--neon);">"${riddle.q}"</div>
+          <div style="color:#ff6b3d; font-weight:bold; margin-bottom:0.5rem; font-size:0.7rem; letter-spacing:2px;">STEP 2 — VIGENÈRE DECRYPT:</div>
+          <div style="color:var(--neon); font-size:1.2rem; font-weight:bold; letter-spacing:4px; margin-bottom:0.8rem;">${vEncrypted}</div>
+          <div style="color:var(--text-dim); font-size:0.7rem; line-height:1.6; border-top:1px solid rgba(255,26,26,0.15); padding-top:0.5rem;">
+            <span style="color:var(--neon-cyan);">Vigenère formula:</span> Plain[i] = (Cipher[i] − Key[i]) mod 26<br/>
+            Use the riddle answer as the repeating key. Submit the decrypted word.
+          </div>
+        </div>
+      `,
+      hintText: 'Solve the riddle first. Then for each letter: subtract the key letter position from the cipher letter position (mod 26).',
+      answer: confirmWord,
+      hint: `The riddle answer is "${riddle.a}". Use it as the Vigenère key to decrypt "${vEncrypted}".`,
+      validate(input) { return input.trim().toUpperCase() === this.answer; }
     }
   ];
 
-  const finalCode = `${p1Answer}-${p2Answer}-${qrWord}-${riddle.a}`;
+  const finalCode = `${p1Answer}-${p2Answer}-${hexWord}-${confirmWord}`;
 
   return { puzzles, finalCode };
 }
