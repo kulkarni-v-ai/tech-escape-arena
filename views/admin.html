@@ -394,6 +394,68 @@
   <script>
     (function () {
       'use strict';
+
+      function customAlert(message) {
+        const existing = document.getElementById('custom-alert');
+        if (existing) existing.remove();
+        
+        const overlay = document.createElement('div');
+        overlay.id = 'custom-alert';
+        overlay.style.position = 'fixed';
+        overlay.style.inset = '0';
+        overlay.style.background = 'rgba(0, 0, 0, 0.8)';
+        overlay.style.backdropFilter = 'blur(4px)';
+        overlay.style.zIndex = '9999';
+        overlay.style.display = 'flex';
+        overlay.style.alignItems = 'center';
+        overlay.style.justifyContent = 'center';
+        
+        const box = document.createElement('div');
+        box.style.background = '#0d0d0d';
+        box.style.border = '1px solid #ff003c';
+        box.style.borderRadius = '8px';
+        box.style.padding = '2rem';
+        box.style.maxWidth = '400px';
+        box.style.width = '90%';
+        box.style.textAlign = 'center';
+        box.style.boxShadow = '0 0 30px rgba(255, 0, 60, 0.3)';
+        
+        const title = document.createElement('div');
+        title.style.fontFamily = 'var(--font-heading)';
+        title.style.color = '#ff003c';
+        title.style.fontSize = '1.2rem';
+        title.style.marginBottom = '1rem';
+        title.style.letterSpacing = '2px';
+        title.textContent = 'SYSTEM NOTIFICATION';
+        
+        const msg = document.createElement('div');
+        msg.style.fontFamily = 'var(--font-mono)';
+        msg.style.color = 'var(--text-primary)';
+        msg.style.fontSize = '0.9rem';
+        msg.style.marginBottom = '1.5rem';
+        msg.textContent = message;
+        
+        const btn = document.createElement('button');
+        btn.textContent = 'ACKNOWLEDGE';
+        btn.style.background = 'rgba(255, 0, 60, 0.2)';
+        btn.style.border = '1px solid #ff003c';
+        btn.style.color = '#ff003c';
+        btn.style.padding = '8px 16px';
+        btn.style.fontFamily = 'var(--font-mono)';
+        btn.style.cursor = 'pointer';
+        btn.style.borderRadius = '4px';
+        
+        btn.addEventListener('click', () => overlay.remove());
+        
+        box.appendChild(title);
+        box.appendChild(msg);
+        box.appendChild(btn);
+        overlay.appendChild(box);
+        document.body.appendChild(overlay);
+      }
+      
+      window.alert = customAlert;
+
       // Set admin nav links
       const adminPath = window.location.pathname.replace(/\/dashboard$/, '');
       const r2Nav = document.getElementById('nav-r2-admin'); if(r2Nav) r2Nav.href = adminPath + '/round2';
@@ -736,7 +798,8 @@
             alert('Failed to add team: ' + (data.error || 'Unknown error'));
           }
         } catch(err) {
-          alert('Network error while adding team');
+          console.error('Add team error:', err);
+          alert('Error while adding team: ' + (err.message || String(err)));
         } finally {
           btn.disabled = false;
           btn.textContent = 'ADD TEAM';
@@ -777,7 +840,8 @@
             alert('Failed to update team: ' + (data.error || 'Unknown error'));
           }
         } catch(err) {
-          alert('Network error while updating team');
+          console.error('Update team error:', err);
+          alert('Error while updating team: ' + (err.message || String(err)));
         } finally {
           btn.disabled = false;
           btn.textContent = 'SAVE';
