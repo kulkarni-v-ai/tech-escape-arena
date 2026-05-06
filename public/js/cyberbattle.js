@@ -56,7 +56,8 @@
     return s ? JSON.parse(s) : null;
   }
 
-  function init() {
+  async function init() {
+    try { await Storage.syncWithServer(); } catch(e){}
     state = loadState();
     if (!state || state.battleStatus === 'setup') {
       state = getDefaultState();
@@ -75,6 +76,22 @@
     document.getElementById('setup-screen').classList.remove('hidden');
     const container = document.getElementById('setup-matches');
     container.innerHTML = '';
+
+    // Get all registered teams from Storage
+    const allTeams = Storage.getAllTeams();
+    const teamNames = Object.values(allTeams)
+      .map(t => t.name || t.teamName)
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b));
+
+    const getOptions = (selected) => {
+      let opts = '<option value="">-- Select Team --</option>';
+      teamNames.forEach(name => {
+        opts += `<option value="${name}" ${name === selected ? 'selected' : ''}>${name}</option>`;
+      });
+      return opts;
+    };
+
     for (let i = 0; i < 4; i++) {
       const m = state.bracket[i];
       container.innerHTML += `
@@ -82,11 +99,11 @@
           <div class="cb-setup-match-title">MATCH ${i + 1}</div>
           <div class="cb-setup-row">
             <span class="cb-setup-label" style="color:var(--neon);">TEAM A</span>
-            <input class="cb-setup-input" id="setup-a-${i}" value="${m.teamA}" placeholder="Team name..." />
+            <select class="cb-setup-input" id="setup-a-${i}">${getOptions(m.teamA)}</select>
           </div>
           <div class="cb-setup-row">
             <span class="cb-setup-label" style="color:#00aaff;">TEAM B</span>
-            <input class="cb-setup-input" id="setup-b-${i}" value="${m.teamB}" placeholder="Team name..." />
+            <select class="cb-setup-input" id="setup-b-${i}">${getOptions(m.teamB)}</select>
           </div>
         </div>`;
     }
