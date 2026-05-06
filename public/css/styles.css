@@ -1009,6 +1009,63 @@ body::after {
 }
 
 /* ===========================
+   AUTH CONTAINER (Registration)
+   =========================== */
+.auth-container {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem;
+  animation: fadeIn 1s ease;
+}
+
+.auth-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 2.5rem;
+  width: 100%;
+  max-width: 420px;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  text-align: center;
+}
+
+.auth-header {
+  margin-bottom: 1.5rem;
+}
+
+.auth-title {
+  font-family: var(--font-heading);
+  font-size: clamp(1.4rem, 4vw, 2rem);
+  font-weight: 900;
+  color: var(--neon);
+  text-shadow: 0 0 30px var(--neon-glow), 0 0 60px rgba(255, 26, 26, 0.15);
+  letter-spacing: 4px;
+}
+
+.auth-line {
+  width: 60px;
+  height: 1px;
+  background: var(--neon);
+  margin: 1rem auto 0;
+  box-shadow: 0 0 8px var(--neon-glow);
+}
+
+.auth-subtitle {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  letter-spacing: 2px;
+  margin-bottom: 1.5rem;
+  opacity: 0.7;
+}
+
+/* ===========================
    VIEW SWITCHING
    =========================== */
 .view-section {
