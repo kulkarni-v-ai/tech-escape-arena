@@ -117,7 +117,7 @@ app.post('/api/register', async (req, res) => {
     await Team.findOneAndUpdate(
       { teamId: id },
       {
-        id: id, teamId: id, teamName: name, members, loginCode,
+        teamId: id, teamName: name, members, loginCode,
         startTime: config?.startedAt || null, endTime: null,
         puzzlesSolved: 0, puzzleAnswers: {}, puzzleAttempts: {},
         loginAttempts: 0, loggedIn: false, isQualified: false,
@@ -317,13 +317,16 @@ app.post('/api/admin/import-teams', requireAuth, async (req, res) => {
       const loginCode = await generateLoginCode();
       await Team.findOneAndUpdate(
         { teamId },
-        { id: teamId, teamId, teamName: t.teamName || '', members: t.members || '', loginCode, currentRound: 1, eliminated: false, score: 0 },
+        { teamId, teamName: t.teamName || '', members: t.members || '', loginCode, currentRound: 1, eliminated: false, score: 0 },
         { upsert: true, new: true }
       );
       results.push(teamId);
     }
     res.json({ success: true, imported: results.length, teamIds: results });
-  } catch (err) { res.status(500).json({ error: 'Database error' }); }
+  } catch (err) { 
+    console.error('import-teams error:', err);
+    res.status(500).json({ error: err.message || 'Database error' }); 
+  }
 });
 
 app.post('/api/admin/edit-team', requireAuth, async (req, res) => {
@@ -332,7 +335,10 @@ app.post('/api/admin/edit-team', requireAuth, async (req, res) => {
     const team = await Team.findOneAndUpdate({ teamId }, { teamName, members }, { new: true });
     if (!team) return res.status(404).json({ error: 'Team not found' });
     res.json({ success: true, team });
-  } catch (err) { res.status(500).json({ error: 'Database error' }); }
+  } catch (err) { 
+    console.error('edit-team error:', err);
+    res.status(500).json({ error: err.message || 'Database error' }); 
+  }
 });
 
 app.post('/api/admin/delete-team', requireAuth, async (req, res) => {
