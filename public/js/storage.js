@@ -272,5 +272,6 @@ const Storage = (() => {
     isLoggedIn,
     setLoggedIn,
     resetAll,
+    syncWithServer,
   };
 })();
