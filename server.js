@@ -281,23 +281,15 @@ app.post('/api/adminState', requireAuth, async (req, res) => {
       await Team.updateMany({}, { startTime: Date.now(), endTime: null });
 
     if (updates.resetRound) {
-      await RoundConfig.findOneAndUpdate(
-        { roundNumber: roundNum },
-        { startedAt: null, status: 'waiting', totalPausedMs: 0, pausedAt: null },
-        { upsert: true }
-      );
-      // Increment round and update the selector doc so the Admin UI stays in sync
-      const nextRound = Math.min(updates.currentRound || (roundNum + 1), 4);
-      await RoundConfig.findOneAndUpdate(
-        { roundNumber: 0 },
-        { selectedRound: nextRound },
-        { upsert: true }
-      );
-      roundNum = nextRound;
+      // UNIVERSAL STOP: Kill all timers across all rounds
+      await RoundConfig.updateMany({}, { startedAt: null, status: 'waiting', totalPausedMs: 0, pausedAt: null });
+      // Reset selection to Round 1
+      await RoundConfig.findOneAndUpdate({ roundNumber: 0 }, { selectedRound: 1 }, { upsert: true });
+      roundNum = 1;
     }
 
     if (updates.resetProgress) {
-      // CLEAR ALL TEAM PROGRESS for Round 1/Global
+      // CLEAR ALL TEAM PROGRESS & STOP ALL TIMERS
       await Team.updateMany({}, {
         puzzlesSolved: 0,
         puzzleAnswers: {},
@@ -307,12 +299,9 @@ app.post('/api/adminState', requireAuth, async (req, res) => {
         eliminated: false,
         isQualified: false
       });
-      
-      // Also stop the round timer
-      await RoundConfig.findOneAndUpdate(
-        { roundNumber: roundNum },
-        { startedAt: null, status: 'waiting', totalPausedMs: 0, pausedAt: null }
-      );
+      await RoundConfig.updateMany({}, { startedAt: null, status: 'waiting', totalPausedMs: 0, pausedAt: null });
+      await RoundConfig.findOneAndUpdate({ roundNumber: 0 }, { selectedRound: 1 }, { upsert: true });
+      roundNum = 1;
     }
       const updateObj = {};
       if (updates.isPaused !== undefined) {
