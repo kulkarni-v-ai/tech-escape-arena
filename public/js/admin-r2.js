@@ -9,13 +9,17 @@
   const socket = io();
 
   // Auth check
-  const token = sessionStorage.getItem('tea_admin_token');
+  // Auth check
+  let token = sessionStorage.getItem('tea_admin_token') || localStorage.getItem('tea_admin_token');
   if (!token) {
-    let p = window.location.pathname;
-    // Navigate up to the admin login page
-    const parts = p.split('/');
-    parts.pop(); // remove 'round2'
-    window.location.href = parts.join('/') || '/system-override';
+    // Try to get from URL (for easy transition from R1)
+    const urlParams = new URLSearchParams(window.location.search);
+    token = urlParams.get('token');
+    if (token) sessionStorage.setItem('tea_admin_token', token);
+  }
+
+  if (!token) {
+    window.location.href = '/system-override'; // Direct redirect to login
   }
 
   const headers = {

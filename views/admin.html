@@ -609,6 +609,20 @@
         }
       });
 
+      const btnExport = document.getElementById('btn-export-csv');
+      btnExport.addEventListener('click', () => {
+        exportToCSV();
+      });
+
+      const btnR2 = document.querySelector('a[href="round2"]');
+      if (btnR2) {
+        btnR2.addEventListener('click', (e) => {
+          e.preventDefault();
+          const token = sessionStorage.getItem('tea_admin_token') || localStorage.getItem('tea_admin_token');
+          window.location.href = `round2?token=${token}`;
+        });
+      }
+
       const btnResetProgress = document.getElementById('btn-reset-progress');
       btnResetProgress.addEventListener('click', () => {
         if (confirm("🚨 WARNING: RESET ALL PROGRESS?\n\nThis will PERMANENTLY DELETE all team scores, puzzle answers, and timers for the current round. This cannot be undone. Proceed?")) {

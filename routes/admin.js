@@ -7,8 +7,14 @@ const Team = require('../models/Team');
 // Middleware: auth check (applied per-route using app-level middleware reference)
 function getAuth(req, res, next) {
   const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin';
-  const authMsg = req.headers['authorization'];
-  if (authMsg !== `Bearer ${ADMIN_PASSWORD}`) return res.status(401).json({ error: 'Unauthorized' });
+  const authMsg = req.headers['authorization'] || req.query.token; // Allow token in query for easier R1->R2 transition
+  if (!authMsg) return res.status(401).json({ error: 'Unauthorized: No token provided' });
+  
+  const token = authMsg.replace('Bearer ', '');
+  if (token !== ADMIN_PASSWORD) {
+    console.error('Auth failure: Expected', ADMIN_PASSWORD, 'but got', token);
+    return res.status(401).json({ error: 'Unauthorized: Invalid token' });
+  }
   next();
 }
 
