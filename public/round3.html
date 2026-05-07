@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Round 3: Cyber Battle Terminal</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    .terminal-container {
+      max-width: 800px; margin: 2rem auto; padding: 2rem;
+      background: var(--bg-card); border: 2px solid var(--neon-cyan);
+      border-radius: 12px; text-align: center; position: relative;
+    }
+    .buzzer-btn {
+      width: 200px; height: 200px; border-radius: 50%;
+      background: radial-gradient(circle, #ff003c 0%, #990024 100%);
+      border: 10px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 0 30px rgba(255, 0, 60, 0.5);
+      color: #fff; font-family: var(--font-heading); font-size: 1.5rem;
+      cursor: pointer; transition: all 0.1s ease; margin: 2rem auto;
+      display: flex; align-items: center; justify-content: center;
+      text-transform: uppercase; letter-spacing: 2px;
+    }
+    .buzzer-btn:active { transform: scale(0.95); box-shadow: 0 0 10px rgba(255, 0, 60, 0.8); }
+    .buzzer-btn:disabled { background: #333; box-shadow: none; cursor: not-allowed; opacity: 0.5; }
+    
+    .q-display { margin-top: 2rem; padding: 1.5rem; background: rgba(0,0,0,0.4); border-radius: 8px; display: none; }
+    .q-text { font-size: 1.2rem; margin-bottom: 1.5rem; color: #fff; }
+    .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .opt-btn {
+      padding: 1rem; background: rgba(0,255,170,0.05); border: 1px solid var(--neon-cyan);
+      border-radius: 6px; color: var(--neon-cyan); cursor: pointer; transition: all 0.2s;
+    }
+    .opt-btn:hover { background: var(--neon-cyan); color: #000; }
+    .opt-btn.selected { background: var(--neon-cyan); color: #000; box-shadow: 0 0 15px var(--neon-cyan); }
+    
+    .status-msg { margin-top: 1rem; font-family: var(--font-mono); font-size: 0.9rem; letter-spacing: 1px; }
+    .waiting-msg { color: var(--text-dim); animation: blink 2s infinite; }
+    
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+  </style>
+</head>
+<body>
+  <div class="scanlines"></div>
+  <div class="noise"></div>
+
+  <div class="terminal-container">
+    <div class="lb-badge">CYBER BATTLE TERMINAL</div>
+    <h1 id="team-display" style="color:var(--neon-cyan); margin: 0.5rem 0;">TEAM: LOADING...</h1>
+    
+    <div id="waiting-area">
+      <div class="buzzer-btn" id="btn-buzzer">WAITING</div>
+      <p class="status-msg waiting-msg">// Round 3 has not started or is pending match assignment</p>
+    </div>
+
+    <div id="battle-area" style="display:none;">
+      <div class="q-display" id="q-container" style="display:block;">
+        <p class="q-text" id="q-text">Ready for the next question?</p>
+        <div class="options-grid" id="options-grid">
+          <!-- Options injected here -->
+        </div>
+      </div>
+      <p class="status-msg" id="feedback-msg" style="margin-top:2rem;"></p>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="js/storage.js"></script>
+  <script>
+    const socket = io();
+    const btnBuzzer = document.getElementById('btn-buzzer');
+    const waitingArea = document.getElementById('waiting-area');
+    const battleArea = document.getElementById('battle-area');
+    const qText = document.getElementById('q-text');
+    const optionsGrid = document.getElementById('options-grid');
+    const feedbackMsg = document.getElementById('feedback-msg');
+    const teamDisplay = document.getElementById('team-display');
+
+    let currentTeam = Storage.getTeamId();
+    teamDisplay.textContent = `TEAM: ${currentTeam || 'UNKNOWN'}`;
+
+    // Sync with Round 3 Host State
+    socket.on('r3:state', (state) => {
+      // Check if current team is part of the active match
+      const match = state.bracket[state.currentMatch];
+      if (!match) return;
+
+      const isActive = (match.teamA === currentTeam || match.teamB === currentTeam);
+      
+      if (isActive && state.battleStatus === 'question') {
+        waitingArea.style.display = 'none';
+        battleArea.style.display = 'block';
+        renderQuestion(state.currentQ);
+      } else {
+        waitingArea.style.display = 'block';
+        battleArea.style.display = 'none';
+        btnBuzzer.textContent = isActive ? 'GET READY' : 'SPECTATING';
+      }
+    });
+
+    function renderQuestion(q) {
+      qText.textContent = q.question;
+      optionsGrid.innerHTML = '';
+      q.options.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'opt-btn';
+        btn.textContent = String.fromCharCode(65 + i) + '. ' + opt;
+        btn.onclick = () => submitAnswer(i);
+        optionsGrid.appendChild(btn);
+      });
+      feedbackMsg.textContent = 'SELECT THE CORRECT OPTION!';
+      feedbackMsg.style.color = 'var(--neon-cyan)';
+    }
+
+    function submitAnswer(idx) {
+      const btns = optionsGrid.querySelectorAll('.opt-btn');
+      btns.forEach(b => b.disabled = true);
+      btns[idx].classList.add('selected');
+      
+      feedbackMsg.textContent = 'ANSWER SUBMITTED. WAITING...';
+      
+      // Emit to server (Host will receive via socket or polling)
+      socket.emit('r3:submit', {
+        teamId: currentTeam,
+        answerIdx: idx,
+        timestamp: Date.now()
+      });
+    }
+  </script>
+</body>
+</html>

@@ -102,5 +102,5 @@
   {"id":102,"category":"Tech & Cyber","question":"Who is known as the father of the World Wide Web?","options":["Bill Gates","Steve Jobs","Tim Berners-Lee","Mark Zuckerberg"],"correctAnswer":"Tim Berners-Lee","difficulty":"medium","timer":30},
   {"id":103,"category":"Tech & Cyber","question":"Which of these is NOT an operating system?","options":["Linux","Oracle","Windows","macOS"],"correctAnswer":"Oracle","difficulty":"medium","timer":25},
   {"id":104,"category":"Tech & Cyber","question":"What does 'URL' stand for?","options":["Universal Resource Locator","Uniform Resource Locator","Unified Reference Link","Universal Reference Locator"],"correctAnswer":"Uniform Resource Locator","difficulty":"medium","timer":25},
-  {"id":105,"category":"Tech & Cyber","question":"Which file extension is used for a Python script?","options":".js",".py",".java",".cpp"],"correctAnswer":".py","difficulty":"medium","timer":20}
+  {"id":105,"category":"Tech & Cyber","question":"Which file extension is used for a Python script?","options":[".js",".py",".java",".cpp"],"correctAnswer":".py","difficulty":"medium","timer":20}
 ]

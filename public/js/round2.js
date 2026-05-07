@@ -82,7 +82,7 @@
       // Auto-show success overlay and then redirect to Round 3 after 5 seconds
       showSuccess(teamInput.value || Storage.getTeamId() || 'UNSYNCED');
       setTimeout(() => {
-        window.location.href = '/cyberbattle.html';
+        window.location.href = '/round3.html';
       }, 5000);
     }
   }

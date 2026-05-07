@@ -52,7 +52,6 @@
       box-shadow: 0 0 10px var(--neon-glow);
     }
 
-    /* Round Status Bar */
     .round-status-bar {
       display: flex;
       align-items: center;
@@ -269,6 +268,17 @@
   <div class="noise"></div>
 
   <div class="admin-container">
+    <div class="round-status-bar">
+      <div class="round-indicator">CURRENT: <span id="active-round-label">ROUND 1</span></div>
+      <div class="round-timer" id="admin-timer">NOT STARTED</div>
+      <div class="admin-controls-group" style="display:flex; gap:0.5rem; margin-left:1rem;">
+        <button class="a2-btn green" id="btn-master-start">▶ START ROUND</button>
+        <button class="a2-btn danger" id="btn-master-end" style="display:none;">⏹ END ROUND</button>
+        <button class="a2-btn cyan" id="btn-promote-r2">🚀 START ROUND 2</button>
+      </div>
+      <div class="team-count"><span id="total-teams">0</span> TEAMS CONNECTED</div>
+    </div>
+
     <div class="admin-header">
       <div class="dashboard-header-main" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem;">
         <div>
@@ -523,44 +533,25 @@
 
         // Round indicator
         const round = st.currentRound || 1;
-        roundIndicator.textContent = `ROUND ${round}`;
+        activeRoundLabel.textContent = `ROUND ${round}`;
         
-        // Update round selector buttons
-        roundSelectBtns.forEach(btn => {
-          const r = parseInt(btn.getAttribute('data-round'));
-          btn.classList.remove('active');
-          btn.style.background = '';
-          btn.style.color = '';
-          btn.style.borderColor = '';
-          if (r === round) {
-            btn.classList.add('active');
-            btn.style.background = st.roundStartedAt ? 'var(--neon)' : 'rgba(255,26,26,0.2)';
-            btn.style.color = st.roundStartedAt ? '#000' : 'var(--neon)';
-            btn.style.borderColor = 'var(--neon)';
-          } else if (r < round) {
-            btn.style.background = 'rgba(0,255,170,0.1)';
-            btn.style.color = '#00ffaa';
-            btn.style.borderColor = '#00ffaa';
-          }
-        });
+        // Master buttons
+        if (round === 1) {
+          btnPromoteR2.style.display = '';
+        } else {
+          btnPromoteR2.style.display = 'none';
+        }
 
         // Start button state
         if (st.roundStartedAt) {
-          btnStart.textContent = 'Round Active';
-          btnStart.style.opacity = '0.5';
-          btnStart.style.pointerEvents = 'none';
-          btnStart.style.background = 'var(--neon)';
-          btnStart.style.color = '#000';
-          btnEnd.style.opacity = '1';
-          btnEnd.style.pointerEvents = 'auto';
+          btnMasterStart.style.display = 'none';
+          btnMasterEnd.style.display = '';
+          btnMasterEnd.style.opacity = '1';
+          btnMasterEnd.style.pointerEvents = 'auto';
         } else {
-          btnStart.textContent = 'Start Round ' + round;
-          btnStart.style.opacity = '1';
-          btnStart.style.pointerEvents = 'auto';
-          btnStart.style.background = '';
-          btnStart.style.color = '';
-          btnEnd.style.opacity = '0.3';
-          btnEnd.style.pointerEvents = 'none';
+          btnMasterStart.style.display = '';
+          btnMasterStart.textContent = '▶ START ROUND ' + round;
+          btnMasterEnd.style.display = 'none';
         }
       }
 
@@ -595,6 +586,30 @@
         }
       }
       
+      const btnMasterStart = document.getElementById('btn-master-start');
+      const btnMasterEnd = document.getElementById('btn-master-end');
+      const btnPromoteR2 = document.getElementById('btn-promote-r2');
+      const activeRoundLabel = document.getElementById('active-round-label');
+
+      btnMasterStart.addEventListener('click', () => {
+        const round = getAdminState().currentRound || 1;
+        if (confirm(`START ROUND ${round}? The countdown will begin for all teams.`)) {
+          pushAdminState({ startRound: true });
+        }
+      });
+
+      btnMasterEnd.addEventListener('click', () => {
+        if (confirm("END CURRENT ROUND? This will freeze all progress.")) {
+          pushAdminState({ endRound: true });
+        }
+      });
+
+      btnPromoteR2.addEventListener('click', () => {
+        if (confirm("PROMOTE TO ROUND 2? All teams will move to the Round 2 Terminal.")) {
+          pushAdminState({ currentRound: 2 });
+        }
+      });
+
       btnStart.addEventListener('click', () => {
         const round = getAdminState().currentRound || 1;
         if (confirm(`START ROUND ${round}? The 45-minute countdown will begin immediately for all teams.`)) {
