@@ -264,7 +264,7 @@ app.post('/api/adminState', requireAuth, async (req, res) => {
       );
       await Team.updateMany({}, { startTime: Date.now(), endTime: null });
 
-    } else if (updates.resetRound) {
+    if (updates.resetRound) {
       await RoundConfig.findOneAndUpdate(
         { roundNumber: roundNum },
         { startedAt: null, status: 'waiting', totalPausedMs: 0, pausedAt: null },
@@ -278,8 +278,26 @@ app.post('/api/adminState', requireAuth, async (req, res) => {
         { upsert: true }
       );
       roundNum = nextRound;
+    }
 
-    } else {
+    if (updates.resetProgress) {
+      // CLEAR ALL TEAM PROGRESS for Round 1/Global
+      await Team.updateMany({}, {
+        puzzlesSolved: 0,
+        puzzleAnswers: {},
+        puzzleAttempts: {},
+        startTime: null,
+        endTime: null,
+        eliminated: false,
+        isQualified: false
+      });
+      
+      // Also stop the round timer
+      await RoundConfig.findOneAndUpdate(
+        { roundNumber: roundNum },
+        { startedAt: null, status: 'waiting', totalPausedMs: 0, pausedAt: null }
+      );
+    }
       const updateObj = {};
       if (updates.isPaused !== undefined) {
         if (updates.isPaused) {

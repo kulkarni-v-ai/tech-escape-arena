@@ -280,6 +280,7 @@
         <button class="btn-admin" id="btn-start-round">Start Round</button>
         <button class="btn-admin" id="btn-restart-timer" style="border-color:#ffaa00; color:#ffaa00;">Restart Timer</button>
         <button class="btn-admin" id="btn-end-round" style="border-color:#ff003c; color:#ff003c;">End Round</button>
+        <button class="btn-admin" id="btn-reset-progress" style="border-color:#ffaa00; color:#ffaa00; background:rgba(255,170,0,0.1);">Reset All Progress</button>
         <button class="btn-admin" id="btn-toggle-timer">Pause Timer</button>
         <button class="btn-admin" id="btn-toggle-lock">Lock Submissions</button>
         <button class="btn-admin" id="btn-export-csv">Export CSV</button>
@@ -606,6 +607,16 @@
         const round = getAdminState().currentRound || 1;
         if (confirm(`END ROUND ${round}? This will stop the timer. You can then select the next round.`)) {
           pushAdminState({ resetRound: true });
+        }
+      });
+
+      const btnResetProgress = document.getElementById('btn-reset-progress');
+      btnResetProgress.addEventListener('click', () => {
+        if (confirm("🚨 WARNING: RESET ALL PROGRESS?\n\nThis will PERMANENTLY DELETE all team scores, puzzle answers, and timers for the current round. This cannot be undone. Proceed?")) {
+          pushAdminState({ resetProgress: true });
+          setTimeout(() => {
+             Storage.syncWithServer().then(() => renderTable());
+          }, 1000);
         }
       });
 
