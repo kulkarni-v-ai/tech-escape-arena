@@ -47,7 +47,9 @@
   }
 
   // ── Reveal event ──
-  socket.on('reveal:leaderboard', () => {
+  socket.on('reveal:leaderboard', async () => {
+    // Force an immediate data fetch before revealing
+    await fetchLeaderboard();
     revealed = true;
     waitingOverlay.classList.add('hidden');
     cinematicReveal();
