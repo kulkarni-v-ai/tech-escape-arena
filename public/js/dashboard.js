@@ -537,18 +537,33 @@
     showWaitOverlay();
   }
 
-  // Periodic check for elimination or qualification
-  setInterval(() => {
-    const t = Storage.getActiveTeam();
-    if (t && t.eliminated) {
-      window.location.reload(); // Will hit the block above
-    }
-    if (t && t.isQualified) {
-      window.location.href = 'round2.html';
-    }
-  }, 5000);
+  async function checkQualification() {
+    try {
+      const res = await fetch('/api/teamStatus');
+      if (res.ok) {
+        const data = await res.json();
+        // Check for Round 2 Qualification
+        if (data.isQualified && !window.location.pathname.includes('round2')) {
+          window.location.href = '/round2.html';
+          return;
+        }
 
-  // Immediate check for qualification
+        // NEW: Check if Admin has promoted the tournament to Round 3 (Cyber Battle)
+        // We fetch the admin state to see the current active round
+        const stateRes = await fetch('/api/adminState');
+        if (stateRes.ok) {
+          const state = await stateRes.json();
+          if (state.currentRound >= 3 && !window.location.pathname.includes('round3')) {
+            window.location.href = '/round3.html';
+            return;
+          }
+        }
+      }
+    } catch (e) { console.error('Redirect check failed:', e); }
+  }
+
+  // Poll for round changes every 5 seconds
+  setInterval(checkQualification, 5000);
   if (activeTeam && activeTeam.isQualified) {
     window.location.href = 'round2.html';
   }

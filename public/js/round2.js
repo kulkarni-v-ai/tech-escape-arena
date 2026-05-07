@@ -94,6 +94,19 @@
     showSuccess(JSON.parse(savedSubmission).teamId);
   }
 
+  // Poll for round changes to force-redirect to Round 3
+  setInterval(async () => {
+    try {
+      const res = await fetch('/api/adminState');
+      if (res.ok) {
+        const state = await res.json();
+        if (state.currentRound >= 3) {
+          window.location.href = '/round3.html';
+        }
+      }
+    } catch(e) {}
+  }, 5000);
+
   // ── Submit Answer ──
   btnSubmit.addEventListener('click', async () => {
     errorMsg.textContent = '';

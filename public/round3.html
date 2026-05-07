@@ -85,11 +85,13 @@
         return;
       }
 
-      // STRICT CHECK: Is this team part of the current active battle?
-      const teamName = Storage.getTeamName();
-      const teamId = Storage.getTeamId();
-      const isTeamA = match.teamA && (match.teamA === teamName || match.teamA === teamId);
-      const isTeamB = match.teamB && (match.teamB === teamName || match.teamB === teamId);
+      // SMART MATCHING: Compare case-insensitive names and IDs
+      const normalize = (s) => (s || '').toString().toLowerCase().trim();
+      const teamName = normalize(Storage.getTeamName());
+      const teamId = normalize(Storage.getTeamId());
+      
+      const isTeamA = match.teamA && (normalize(match.teamA) === teamName || normalize(match.teamA) === teamId);
+      const isTeamB = match.teamB && (normalize(match.teamB) === teamName || normalize(match.teamB) === teamId);
       const isActiveParticipant = isTeamA || isTeamB;
       
       if (isActiveParticipant && state.battleStatus === 'question') {
@@ -99,11 +101,11 @@
       } else if (isActiveParticipant && (state.battleStatus === 'revealed' || state.battleStatus === 'finished')) {
         waitingArea.style.display = 'block';
         battleArea.style.display = 'none';
-        showStandby('MATCH COMPLETE / POINT AWARDED');
+        showStandby('POINT AWARDED / MATCH OVER');
       } else {
         waitingArea.style.display = 'block';
         battleArea.style.display = 'none';
-        showStandby(isActiveParticipant ? 'GET READY...' : 'STANDBY: OTHER BATTLE IN PROGRESS');
+        showStandby(isActiveParticipant ? 'GET READY: YOU ARE NEXT!' : 'STANDBY: OTHER BATTLE IN PROGRESS');
       }
     });
 
