@@ -60,12 +60,24 @@
 
   function updateFormState(data) {
     if (submitted) return;
-    if (data.isLocked || data.status === 'ended') {
+    
+    // Lock form if round is waiting, paused, ended, or explicitly locked
+    const isLockedState = data.isLocked || data.status === 'waiting' || data.status === 'paused' || data.status === 'ended';
+    
+    if (isLockedState) {
       formSection.classList.add('locked-form');
       btnSubmit.disabled = true;
+      if (data.status === 'waiting') {
+         btnSubmit.textContent = 'WAITING FOR HOST...';
+      } else if (data.status === 'paused') {
+         btnSubmit.textContent = 'ROUND PAUSED';
+      } else {
+         btnSubmit.textContent = 'SUBMISSIONS LOCKED';
+      }
     } else if (data.status === 'running') {
       formSection.classList.remove('locked-form');
       btnSubmit.disabled = false;
+      btnSubmit.textContent = 'SUBMIT ANSWER';
     }
   }
 
