@@ -79,8 +79,11 @@
       btnSubmit.disabled = false;
       btnSubmit.textContent = 'SUBMIT ANSWER';
     } else if (data.status === 'ended') {
-      // Auto-show the success/transition overlay when round ends
+      // Auto-show success overlay and then redirect to Round 3 after 5 seconds
       showSuccess(teamInput.value || Storage.getTeamId() || 'UNSYNCED');
+      setTimeout(() => {
+        window.location.href = '/cyberbattle.html';
+      }, 5000);
     }
   }
 
