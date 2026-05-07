@@ -881,20 +881,19 @@
         a.click(); window.URL.revokeObjectURL(url);
       });
       
-      // Initial sync from server, then render
+      // Initial sync and start polling
       syncAdminState().then(() => {
         updateAdminUI();
-        renderTable();
         updateTimer();
+        Storage.syncWithServer().then(() => renderTable());
       });
-
-      setInterval(async () => {
-        await syncAdminState();
-        renderTable();
-        updateTimer();
-        updateAdminUI();
+      setInterval(() => {
+        syncAdminState().then(() => {
+          updateAdminUI();
+          updateTimer();
+        });
+        Storage.syncWithServer().then(() => renderTable());
       }, 3000);
-    })();
   </script>
 </body>
 </html>
