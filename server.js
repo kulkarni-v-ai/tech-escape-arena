@@ -245,8 +245,18 @@ app.post('/api/adminState', requireAuth, async (req, res) => {
 
     // Find current active config
     let config = await RoundConfig.findOne({ status: { $in: ['running', 'paused'] } });
-    if (!config) config = await RoundConfig.findOne().sort({ roundNumber: -1 });
-    let roundNum = config?.roundNumber || updates.currentRound || 1;
+    
+    // If no running round, use the selector doc (round 0)
+    const selector = await RoundConfig.findOne({ roundNumber: 0 });
+    let roundNum = updates.currentRound || selector?.selectedRound || 1;
+
+    if (!config) {
+      config = await RoundConfig.findOne({ roundNumber: roundNum });
+      if (!config) {
+        // Create it if missing
+        config = await RoundConfig.create({ roundNumber: roundNum, status: 'waiting' });
+      }
+    }
 
     if (updates.startRound) {
       await RoundConfig.findOneAndUpdate(
