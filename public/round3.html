@@ -60,6 +60,8 @@
     </div>
   </div>
 
+  <div id="debug-info" style="position:fixed; bottom:10px; right:10px; font-size:0.6rem; color:rgba(255,255,255,0.2); font-family:var(--font-mono); pointer-events:none;">ID: UNKNOWN | NAME: UNKNOWN</div>
+
   <script src="/socket.io/socket.io.js"></script>
   <script src="js/storage.js"></script>
   <script>
@@ -77,22 +79,25 @@
 
     // Sync with Round 3 Host State
     socket.on('r3:state', (state) => {
+      console.log('R3 State Update:', state);
       if (!state || !state.bracket) return;
       
       const match = state.bracket[state.currentMatch];
-      if (!match) {
-        showStandby('ROUND 3 PENDING');
-        return;
-      }
-
-      // SMART MATCHING: Compare case-insensitive names and IDs
-      const normalize = (s) => (s || '').toString().toLowerCase().trim();
-      const teamName = normalize(Storage.getTeamName());
-      const teamId = normalize(Storage.getTeamId());
       
-      const isTeamA = match.teamA && (normalize(match.teamA) === teamName || normalize(match.teamA) === teamId);
-      const isTeamB = match.teamB && (normalize(match.teamB) === teamName || normalize(match.teamB) === teamId);
-      const isActiveParticipant = isTeamA || isTeamB;
+      // FUZZY MATCHING: Ignore capitalization, spaces, and punctuation
+      const fuzzy = (s) => (s || '').toString().toLowerCase().replace(/[^a-z0-9]/g, '').trim();
+      const teamName = Storage.getTeamName();
+      const teamId = Storage.getTeamId();
+      
+      const myFuzzyName = fuzzy(teamName);
+      const myFuzzyId = fuzzy(teamId);
+      
+      const isTeamA = match && (fuzzy(match.teamA) === myFuzzyName || fuzzy(match.teamA) === myFuzzyId);
+      const isTeamB = match && (fuzzy(match.teamB) === myFuzzyName || fuzzy(match.teamB) === myFuzzyId);
+      
+      // "FORCE BROADCAST" mode check
+      const isForceBroadcast = state.forceBroadcast === true;
+      const isActiveParticipant = isTeamA || isTeamB || isForceBroadcast;
       
       if (isActiveParticipant && state.battleStatus === 'question') {
         waitingArea.style.display = 'none';
@@ -105,8 +110,12 @@
       } else {
         waitingArea.style.display = 'block';
         battleArea.style.display = 'none';
-        showStandby(isActiveParticipant ? 'GET READY: YOU ARE NEXT!' : 'STANDBY: OTHER BATTLE IN PROGRESS');
+        const msg = isActiveParticipant ? 'GET READY: YOU ARE NEXT!' : 'STANDBY: OTHER BATTLE IN PROGRESS';
+        showStandby(msg);
       }
+      
+      // Update small debug info at bottom
+      document.getElementById('debug-info').textContent = `ID: ${teamId} | NAME: ${teamName}`;
     });
 
     function showStandby(msg) {

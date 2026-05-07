@@ -114,9 +114,13 @@
     <div class="cb-setup-card">
       <h2>⚔ BRACKET SETUP</h2>
       <div id="setup-matches"></div>
-      <div style="display:flex;gap:0.5rem;margin-top:1rem;">
+      <div style="display:flex;gap:0.5rem;margin-top:1rem; align-items:center;">
         <input type="number" class="cb-setup-input" id="qPerBattle" value="10" min="3" max="20" style="max-width:80px;" />
-        <span style="font-family:var(--font-mono);font-size:0.75rem;color:var(--text-dim);align-self:center;">questions per battle</span>
+        <span style="font-family:var(--font-mono);font-size:0.75rem;color:var(--text-dim);">questions per battle</span>
+      </div>
+      <div style="display:flex;gap:0.5rem;margin-top:0.8rem; align-items:center; background:rgba(0,255,170,0.05); padding:10px; border-radius:6px; border:1px solid rgba(0,255,170,0.2);">
+        <input type="checkbox" id="forceBroadcast" style="width:20px;height:20px;cursor:pointer;" />
+        <label for="forceBroadcast" style="font-family:var(--font-heading);font-size:0.7rem;color:#00ffaa;cursor:pointer;letter-spacing:1px;">📢 BROADCAST TO ALL TEAMS (OVERRIDE)</label>
       </div>
       <button class="cb-ctrl green" id="btn-save-bracket" style="width:100%;margin-top:1rem;padding:14px;">START TOURNAMENT</button>
     </div>

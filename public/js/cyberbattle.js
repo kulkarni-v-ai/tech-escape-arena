@@ -133,6 +133,7 @@
       state.bracket[i].teamB = document.getElementById(`setup-b-${i}`).value.trim() || `Team ${i*2+2}`;
     }
     state.questionsPerBattle = parseInt(document.getElementById('qPerBattle').value) || 10;
+    state.forceBroadcast = document.getElementById('forceBroadcast').checked;
     state.battleStatus = 'waiting';
     state.currentMatch = 0;
     saveState();
