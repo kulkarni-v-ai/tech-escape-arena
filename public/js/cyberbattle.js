@@ -78,10 +78,11 @@
     container.innerHTML = '';
 
     // Get all registered teams from Storage - filter for Qualified teams only
+    // Get all registered teams from Storage
     const allTeams = Storage.getAllTeams();
-    const teamNames = Object.values(allTeams)
-      .filter(t => t.isQualified === true)
-      .map(t => t.name || t.teamName)
+    const teamsArray = Array.isArray(allTeams) ? allTeams : Object.values(allTeams);
+    const teamNames = teamsArray
+      .map(t => t.name || t.teamName || t.teamId)
       .filter(Boolean)
       .sort((a, b) => a.localeCompare(b));
 
