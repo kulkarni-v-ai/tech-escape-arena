@@ -537,12 +537,20 @@
     showWaitOverlay();
   }
 
-  // Periodic check for elimination
+  // Periodic check for elimination or qualification
   setInterval(() => {
     const t = Storage.getActiveTeam();
     if (t && t.eliminated) {
       window.location.reload(); // Will hit the block above
     }
+    if (t && t.isQualified) {
+      window.location.href = 'round2.html';
+    }
   }, 5000);
+
+  // Immediate check for qualification
+  if (activeTeam && activeTeam.isQualified) {
+    window.location.href = 'round2.html';
+  }
 
 })();
