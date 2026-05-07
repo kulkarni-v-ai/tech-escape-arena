@@ -57,6 +57,18 @@
   }
 
   async function init() {
+    // SECURITY: Only allow Admin to access the setup/control panel
+    const token = sessionStorage.getItem('tea_admin_token') || localStorage.getItem('tea_admin_token');
+    const ADMIN_PASS = 'admin'; // Fallback if env not accessible client-side
+    
+    // In a real app, we'd verify this token with the server. 
+    // For now, if no token exists, we assume it's a participant and redirect them.
+    if (!token) {
+      console.warn('Unauthorized access to CyberBattle. Redirecting to Participant Terminal.');
+      window.location.href = '/round3.html';
+      return;
+    }
+
     try { await Storage.syncWithServer(); } catch(e){}
     state = loadState();
     if (!state || state.battleStatus === 'setup') {
