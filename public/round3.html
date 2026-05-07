@@ -135,30 +135,65 @@
       if (el) el.textContent = msg;
     }
 
+    let selectedIdx = null;
+
     function renderQuestion(q) {
       if (!q) return;
+      selectedIdx = null;
       qText.textContent = q.question;
       optionsGrid.innerHTML = '';
       q.options.forEach((opt, i) => {
         const btn = document.createElement('button');
         btn.className = 'opt-btn';
         btn.textContent = String.fromCharCode(65 + i) + '. ' + opt;
-        btn.onclick = () => submitAnswer(i);
+        btn.onclick = () => selectOption(i);
         optionsGrid.appendChild(btn);
       });
+
+      // Add submit button
+      const existing = document.getElementById('btn-submit-answer');
+      if (existing) existing.remove();
+      const submitBtn = document.createElement('button');
+      submitBtn.id = 'btn-submit-answer';
+      submitBtn.textContent = '🔒 SUBMIT ANSWER';
+      submitBtn.style.cssText = 'margin-top:1.5rem;padding:1rem 2rem;background:rgba(255,26,26,0.15);border:2px solid var(--neon);color:var(--neon);font-family:var(--font-heading);font-size:1rem;letter-spacing:2px;border-radius:8px;cursor:pointer;width:100%;transition:all 0.2s;opacity:0.4;pointer-events:none;';
+      submitBtn.onclick = () => confirmSubmit();
+      document.getElementById('q-container').appendChild(submitBtn);
     }
 
-    function submitAnswer(idx) {
-      if (hasSubmitted) return; // Prevent double-submit
+    function selectOption(idx) {
+      if (hasSubmitted) return;
+      selectedIdx = idx;
+      const btns = optionsGrid.querySelectorAll('.opt-btn');
+      btns.forEach((b, i) => {
+        b.classList.toggle('selected', i === idx);
+      });
+      // Enable submit button
+      const submitBtn = document.getElementById('btn-submit-answer');
+      if (submitBtn) {
+        submitBtn.style.opacity = '1';
+        submitBtn.style.pointerEvents = 'auto';
+      }
+    }
+
+    function confirmSubmit() {
+      if (hasSubmitted || selectedIdx === null) return;
       hasSubmitted = true;
       const btns = optionsGrid.querySelectorAll('.opt-btn');
-      btns.forEach(b => { b.disabled = true; b.style.opacity = '0.5'; });
-      btns[idx].classList.add('selected');
-      btns[idx].style.opacity = '1';
+      btns.forEach(b => { b.disabled = true; b.style.opacity = '0.4'; });
+      btns[selectedIdx].style.opacity = '1';
+      const submitBtn = document.getElementById('btn-submit-answer');
+      if (submitBtn) {
+        submitBtn.textContent = '✅ ANSWER SUBMITTED';
+        submitBtn.style.background = 'rgba(0,255,100,0.15)';
+        submitBtn.style.borderColor = '#00ff64';
+        submitBtn.style.color = '#00ff64';
+        submitBtn.style.pointerEvents = 'none';
+      }
       socket.emit('r3:submit', {
         teamId: Storage.getTeamId(),
         teamName: Storage.getTeamName(),
-        answerIdx: idx,
+        answerIdx: selectedIdx,
         timestamp: Date.now()
       });
     }
