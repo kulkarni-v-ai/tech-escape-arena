@@ -62,7 +62,7 @@
   function handleParticipantSubmission(data) {
     if (state.battleStatus !== 'question') return;
     const match = state.bracket[state.currentMatch];
-    if (!match) return;
+    if (!match || !state.currentQ) return;
 
     const fuzzy = (s) => (s || '').toString().toLowerCase().replace(/[^a-z0-9]/g, '').trim();
     const submitId = fuzzy(data.teamId);
@@ -71,14 +71,31 @@
     const isTeamA = (fuzzy(match.teamA) === submitId || (submitName && fuzzy(match.teamA) === submitName));
     const isTeamB = (fuzzy(match.teamB) === submitId || (submitName && fuzzy(match.teamB) === submitName));
 
+    // Check if answer is correct
+    const selectedOption = state.currentQ.options[data.answerIdx];
+    const isCorrect = selectedOption === state.currentQ.correctAnswer;
+    const label = String.fromCharCode(65 + data.answerIdx);
+
     if (isTeamA && answerA === null) {
       answerA = data.answerIdx;
       sfxTick();
+      // Show admin: Team A answered
+      const statusA = document.getElementById('status-a');
+      if (statusA) {
+        statusA.textContent = `📥 ANSWERED: ${label}` + (isCorrect ? ' ✅' : ' ❌');
+        statusA.className = 'cb-team-status ' + (isCorrect ? 'cb-status-correct' : 'cb-status-wrong');
+      }
       renderAnswerButtons(state.currentQ);
       checkAnswered();
     } else if (isTeamB && answerB === null) {
       answerB = data.answerIdx;
       sfxTick();
+      // Show admin: Team B answered
+      const statusB = document.getElementById('status-b');
+      if (statusB) {
+        statusB.textContent = `📥 ANSWERED: ${label}` + (isCorrect ? ' ✅' : ' ❌');
+        statusB.className = 'cb-team-status ' + (isCorrect ? 'cb-status-correct' : 'cb-status-wrong');
+      }
       renderAnswerButtons(state.currentQ);
       checkAnswered();
     }

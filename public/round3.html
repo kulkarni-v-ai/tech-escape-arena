@@ -67,17 +67,17 @@
   <script src="js/storage.js?t=1715088010"></script>
   <script>
     let socket;
-    function initRound3() {
+    let currentQId = null; // Track which question is displayed to avoid re-rendering
+    let hasSubmitted = false;
+
+    (function init() {
       try {
         if (typeof io !== 'undefined') {
           socket = io();
           setupListeners();
         }
       } catch(e) { console.error('Socket init failed:', e); }
-    }
-    
-    // Execute immediately since the socket.io script above is synchronous and blocking
-    initRound3();
+    })();
     
     const waitingArea = document.getElementById('waiting-area');
     const battleArea = document.getElementById('battle-area');
@@ -99,27 +99,31 @@
         if (isActive && state.battleStatus === 'question') {
           waitingArea.style.display = 'none';
           battleArea.style.display = 'block';
-          renderQuestion(state.currentQ);
           
-          // Update Participant Timer
+          // Only render question ONCE (not on every timer tick)
+          const qId = state.currentQ && state.currentQ.id;
+          if (qId !== currentQId) {
+            currentQId = qId;
+            hasSubmitted = false;
+            renderQuestion(state.currentQ);
+          }
+          
+          // Always update timer
           const timerEl = document.getElementById('p-timer');
           if (timerEl) {
             timerEl.textContent = state.timeLeft;
-            if (state.timeLeft <= 5) {
-              timerEl.style.color = '#ff003c';
-              timerEl.style.textShadow = '0 0 10px #ff003c';
-            } else {
-              timerEl.style.color = 'var(--neon-cyan)';
-              timerEl.style.textShadow = '0 0 10px var(--neon-cyan)';
-            }
+            timerEl.style.color = state.timeLeft <= 5 ? '#ff003c' : 'var(--neon-cyan)';
+            timerEl.style.textShadow = state.timeLeft <= 5 ? '0 0 10px #ff003c' : '0 0 10px var(--neon-cyan)';
           }
         } else if (isActive && (state.battleStatus === 'revealed' || state.battleStatus === 'finished')) {
           waitingArea.style.display = 'block';
           battleArea.style.display = 'none';
-          showStandby('POINT AWARDED / MATCH OVER');
+          currentQId = null;
+          showStandby('WAITING FOR NEXT QUESTION...');
         } else {
           waitingArea.style.display = 'block';
           battleArea.style.display = 'none';
+          currentQId = null;
           showStandby(isActive ? 'GET READY: YOU ARE NEXT!' : 'STANDBY: OTHER BATTLE IN PROGRESS');
         }
         document.getElementById('debug-info').textContent = `ID: ${teamId} | NAME: ${teamName}`;
@@ -132,6 +136,7 @@
     }
 
     function renderQuestion(q) {
+      if (!q) return;
       qText.textContent = q.question;
       optionsGrid.innerHTML = '';
       q.options.forEach((opt, i) => {
@@ -144,9 +149,12 @@
     }
 
     function submitAnswer(idx) {
+      if (hasSubmitted) return; // Prevent double-submit
+      hasSubmitted = true;
       const btns = optionsGrid.querySelectorAll('.opt-btn');
-      btns.forEach(b => b.disabled = true);
+      btns.forEach(b => { b.disabled = true; b.style.opacity = '0.5'; });
       btns[idx].classList.add('selected');
+      btns[idx].style.opacity = '1';
       socket.emit('r3:submit', {
         teamId: Storage.getTeamId(),
         teamName: Storage.getTeamName(),
