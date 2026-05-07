@@ -198,14 +198,14 @@
       const btnA = document.createElement('button');
       btnA.className = 'cb-ans-btn team-a' + (answerA === i ? ' locked' : '') + (answerA !== null && answerA !== i ? ' locked' : '');
       btnA.textContent = label;
-      btnA.onclick = () => { if (answerA === null && answerB === null) { answerA = i; renderAnswerButtons(q); checkAnswered(); } };
+      btnA.onclick = () => { if (answerA === null) { answerA = i; renderAnswerButtons(q); checkAnswered(); } };
       btnsA.appendChild(btnA);
 
       // Team B button
       const btnB = document.createElement('button');
       btnB.className = 'cb-ans-btn team-b' + (answerB === i ? ' locked' : '') + (answerB !== null && answerB !== i ? ' locked' : '');
       btnB.textContent = label;
-      btnB.onclick = () => { if (answerB === null && answerA === null) { answerB = i; renderAnswerButtons(q); checkAnswered(); } };
+      btnB.onclick = () => { if (answerB === null) { answerB = i; renderAnswerButtons(q); checkAnswered(); } };
       btnsB.appendChild(btnB);
     });
   }

@@ -97,6 +97,10 @@
   {"id":96,"category":"Riddles","question":"What gets wetter the more it dries?","options":["A sponge","A towel","Rain","Ice"],"correctAnswer":"A towel","difficulty":"easy","timer":30},
   {"id":97,"category":"Riddles","question":"What has a head and a tail but no body?","options":["A snake","A coin","A worm","A pin"],"correctAnswer":"A coin","difficulty":"easy","timer":30},
   {"id":98,"category":"Riddles","question":"I'm tall when I'm young, short when I'm old. What am I?","options":["A tree","A candle","A person","A shadow"],"correctAnswer":"A candle","difficulty":"easy","timer":30},
-  {"id":99,"category":"Riddles","question":"What has keys but no locks?","options":["A map","A keyboard","A treasure","A diary"],"correctAnswer":"A keyboard","difficulty":"easy","timer":30},
-  {"id":100,"category":"Riddles","question":"What building has the most stories?","options":["A skyscraper","A library","A hotel","A museum"],"correctAnswer":"A library","difficulty":"easy","timer":30}
+  {"id":100,"category":"Riddles","question":"What building has the most stories?","options":["A skyscraper","A library","A hotel","A museum"],"correctAnswer":"A library","difficulty":"easy","timer":30},
+  {"id":101,"category":"Tech & Cyber","question":"What does 'WWW' stand for in a website address?","options":["World Wide Web","World Wild Web","Web Wide World","Wide World Web"],"correctAnswer":"World Wide Web","difficulty":"easy","timer":30},
+  {"id":102,"category":"Tech & Cyber","question":"Which key is used to copy text on a computer?","options":["Ctrl+P","Ctrl+V","Ctrl+C","Ctrl+X"],"correctAnswer":"Ctrl+C","difficulty":"easy","timer":30},
+  {"id":103,"category":"Tech & Cyber","question":"What is the brain of the computer?","options":["RAM","Hard Drive","CPU","Monitor"],"correctAnswer":"CPU","difficulty":"easy","timer":30},
+  {"id":104,"category":"Tech & Cyber","question":"Which device is used to type text?","options":["Mouse","Monitor","Keyboard","Printer"],"correctAnswer":"Keyboard","difficulty":"easy","timer":30},
+  {"id":105,"category":"Tech & Cyber","question":"What is a portable computer called?","options":["Desktop","Server","Tablet","Laptop"],"correctAnswer":"Laptop","difficulty":"easy","timer":30}
 ]
