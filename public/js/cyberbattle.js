@@ -50,7 +50,11 @@
     };
   }
 
-  function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  const socket = io();
+  function saveState() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    if (socket) socket.emit('r3:updateState', state);
+  }
   function loadState() {
     const s = localStorage.getItem(STORAGE_KEY);
     return s ? JSON.parse(s) : null;

@@ -430,8 +430,32 @@ app.use('/api/round4', require('./routes/round4'));
 app.use('/api/admin', require('./routes/admin-r4'));
 
 // ─────────────── Socket.IO ───────────────
-io.on('connection', (socket) => {
-  console.log('🔌 Client connected:', socket.id);
+  // Round 3 (Cyber Battle) State
+  let r3State = {
+    bracket: [],
+    currentMatch: 0,
+    currentQuestion: -1,
+    battleStatus: 'setup',
+    currentQ: null,
+    timeLeft: 0
+  };
+
+  io.on('connection', (socket) => {
+    console.log('User connected:', socket.id);
+
+    // Sync R3 State on join
+    socket.emit('r3:state', r3State);
+
+    socket.on('r3:updateState', (newState) => {
+      // Only Admin should be able to update state (ideally verify token)
+      r3State = { ...r3State, ...newState };
+      io.emit('r3:state', r3State);
+    });
+
+    socket.on('r3:submit', (data) => {
+      // Broadcast submission to Host/Viewer
+      io.emit('r3:submission', data);
+    });
   socket.on('disconnect', () => console.log('🔌 Client disconnected:', socket.id));
 });
 

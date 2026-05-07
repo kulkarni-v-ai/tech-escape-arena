@@ -44,23 +44,19 @@
   <div class="scanlines"></div>
   <div class="noise"></div>
 
-  <div class="terminal-container">
-    <div class="lb-badge">CYBER BATTLE TERMINAL</div>
-    <h1 id="team-display" style="color:var(--neon-cyan); margin: 0.5rem 0;">TEAM: LOADING...</h1>
-    
-    <div id="waiting-area">
-      <div class="buzzer-btn" id="btn-buzzer">WAITING</div>
-      <p class="status-msg waiting-msg">// Round 3 has not started or is pending match assignment</p>
+  <div class="terminal-container" style="border:none; background:transparent;">
+    <div id="waiting-area" style="text-align:center; margin-top:10vh;">
+      <p class="lb-waiting-text" style="font-size:1.5rem; color:var(--neon-cyan); letter-spacing:4px;">WAITING FOR CHALLENGE</p>
+      <p style="color:var(--text-dim); margin-top:1rem;">// transmission will appear here</p>
     </div>
 
     <div id="battle-area" style="display:none;">
-      <div class="q-display" id="q-container" style="display:block;">
-        <p class="q-text" id="q-text">Ready for the next question?</p>
-        <div class="options-grid" id="options-grid">
+      <div class="q-display" id="q-container" style="display:block; background:rgba(0,0,0,0.8); border:1px solid var(--neon-cyan); padding:2rem; border-radius:12px;">
+        <p class="q-text" id="q-text" style="font-size:1.5rem; line-height:1.4; margin-bottom:2rem;">Question loading...</p>
+        <div class="options-grid" id="options-grid" style="grid-template-columns: 1fr; gap: 1rem;">
           <!-- Options injected here -->
         </div>
       </div>
-      <p class="status-msg" id="feedback-msg" style="margin-top:2rem;"></p>
     </div>
   </div>
 
@@ -81,22 +77,40 @@
 
     // Sync with Round 3 Host State
     socket.on('r3:state', (state) => {
-      // Check if current team is part of the active match
-      const match = state.bracket[state.currentMatch];
-      if (!match) return;
-
-      const isActive = (match.teamA === currentTeam || match.teamB === currentTeam);
+      if (!state || !state.bracket) return;
       
-      if (isActive && state.battleStatus === 'question') {
+      const match = state.bracket[state.currentMatch];
+      if (!match) {
+        showStandby('ROUND 3 PENDING');
+        return;
+      }
+
+      // STRICT CHECK: Is this team part of the current active battle?
+      const teamName = Storage.getTeamName();
+      const teamId = Storage.getTeamId();
+      const isTeamA = match.teamA && (match.teamA === teamName || match.teamA === teamId);
+      const isTeamB = match.teamB && (match.teamB === teamName || match.teamB === teamId);
+      const isActiveParticipant = isTeamA || isTeamB;
+      
+      if (isActiveParticipant && state.battleStatus === 'question') {
         waitingArea.style.display = 'none';
         battleArea.style.display = 'block';
         renderQuestion(state.currentQ);
+      } else if (isActiveParticipant && (state.battleStatus === 'revealed' || state.battleStatus === 'finished')) {
+        waitingArea.style.display = 'block';
+        battleArea.style.display = 'none';
+        showStandby('MATCH COMPLETE / POINT AWARDED');
       } else {
         waitingArea.style.display = 'block';
         battleArea.style.display = 'none';
-        btnBuzzer.textContent = isActive ? 'GET READY' : 'SPECTATING';
+        showStandby(isActiveParticipant ? 'GET READY...' : 'STANDBY: OTHER BATTLE IN PROGRESS');
       }
     });
+
+    function showStandby(msg) {
+      const el = waitingArea.querySelector('.lb-waiting-text');
+      if (el) el.textContent = msg;
+    }
 
     function renderQuestion(q) {
       qText.textContent = q.question;
