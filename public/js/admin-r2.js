@@ -53,9 +53,9 @@
   const modalCancel = document.getElementById('modal-cancel');
   const navR1 = document.getElementById('nav-r1-admin');
 
-  // Set admin links
+  // Set admin links safely
   let basePath = window.location.pathname.replace(/\/round2$/, '');
-  navR1.href = basePath + '/dashboard';
+  if (navR1) navR1.href = basePath + '/dashboard';
   const navR4 = document.getElementById('nav-r4-admin');
   if (navR4) navR4.href = basePath + '/round4';
 
