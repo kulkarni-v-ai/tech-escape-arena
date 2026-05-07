@@ -62,65 +62,52 @@
 
   <div id="debug-info" style="position:fixed; bottom:10px; right:10px; font-size:0.6rem; color:rgba(255,255,255,0.2); font-family:var(--font-mono); pointer-events:none;">ID: UNKNOWN | NAME: UNKNOWN</div>
 
-  <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+  <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" onload="initRound3()"></script>
   <script src="js/storage.js?v=final"></script>
   <script>
     let socket;
-    try {
-      if (typeof io !== 'undefined') socket = io();
-    } catch(e) { console.error('Socket init failed:', e); }
+    function initRound3() {
+      try {
+        if (typeof io !== 'undefined') {
+          socket = io();
+          setupListeners();
+        }
+      } catch(e) { console.error('Socket init failed:', e); }
+    }
     
-    const btnBuzzer = document.getElementById('btn-buzzer');
     const waitingArea = document.getElementById('waiting-area');
     const battleArea = document.getElementById('battle-area');
     const qText = document.getElementById('q-text');
     const optionsGrid = document.getElementById('options-grid');
-    const feedbackMsg = document.getElementById('feedback-msg');
-    const teamDisplay = document.getElementById('team-display');
 
-    let currentTeam = Storage.getTeamId();
-    teamDisplay.textContent = `TEAM: ${currentTeam || 'UNKNOWN'}`;
-
-    // Sync with Round 3 Host State
-    socket.on('r3:state', (state) => {
-      console.log('R3 State Update:', state);
-      if (!state || !state.bracket) return;
-      
-      const match = state.bracket[state.currentMatch];
-      
-      // FUZZY MATCHING: Ignore capitalization, spaces, and punctuation
-      const fuzzy = (s) => (s || '').toString().toLowerCase().replace(/[^a-z0-9]/g, '').trim();
-      const teamName = Storage.getTeamName();
-      const teamId = Storage.getTeamId();
-      
-      const myFuzzyName = fuzzy(teamName);
-      const myFuzzyId = fuzzy(teamId);
-      
-      const isTeamA = match && (fuzzy(match.teamA) === myFuzzyName || fuzzy(match.teamA) === myFuzzyId);
-      const isTeamB = match && (fuzzy(match.teamB) === myFuzzyName || fuzzy(match.teamB) === myFuzzyId);
-      
-      // "FORCE BROADCAST" mode check
-      const isForceBroadcast = state.forceBroadcast === true;
-      const isActiveParticipant = isTeamA || isTeamB || isForceBroadcast;
-      
-      if (isActiveParticipant && state.battleStatus === 'question') {
-        waitingArea.style.display = 'none';
-        battleArea.style.display = 'block';
-        renderQuestion(state.currentQ);
-      } else if (isActiveParticipant && (state.battleStatus === 'revealed' || state.battleStatus === 'finished')) {
-        waitingArea.style.display = 'block';
-        battleArea.style.display = 'none';
-        showStandby('POINT AWARDED / MATCH OVER');
-      } else {
-        waitingArea.style.display = 'block';
-        battleArea.style.display = 'none';
-        const msg = isActiveParticipant ? 'GET READY: YOU ARE NEXT!' : 'STANDBY: OTHER BATTLE IN PROGRESS';
-        showStandby(msg);
-      }
-      
-      // Update small debug info at bottom
-      document.getElementById('debug-info').textContent = `ID: ${teamId} | NAME: ${teamName}`;
-    });
+    function setupListeners() {
+      if (!socket) return;
+      socket.on('r3:state', (state) => {
+        if (!state || !state.bracket) return;
+        const match = state.bracket[state.currentMatch];
+        const fuzzy = (s) => (s || '').toString().toLowerCase().replace(/[^a-z0-9]/g, '').trim();
+        const teamName = Storage.getTeamName();
+        const teamId = Storage.getTeamId();
+        const isTeamA = match && (fuzzy(match.teamA) === fuzzy(teamName) || fuzzy(match.teamA) === fuzzy(teamId));
+        const isTeamB = match && (fuzzy(match.teamB) === fuzzy(teamName) || fuzzy(match.teamB) === fuzzy(teamId));
+        const isActive = isTeamA || isTeamB || state.forceBroadcast === true;
+        
+        if (isActive && state.battleStatus === 'question') {
+          waitingArea.style.display = 'none';
+          battleArea.style.display = 'block';
+          renderQuestion(state.currentQ);
+        } else if (isActive && (state.battleStatus === 'revealed' || state.battleStatus === 'finished')) {
+          waitingArea.style.display = 'block';
+          battleArea.style.display = 'none';
+          showStandby('POINT AWARDED / MATCH OVER');
+        } else {
+          waitingArea.style.display = 'block';
+          battleArea.style.display = 'none';
+          showStandby(isActive ? 'GET READY: YOU ARE NEXT!' : 'STANDBY: OTHER BATTLE IN PROGRESS');
+        }
+        document.getElementById('debug-info').textContent = `ID: ${teamId} | NAME: ${teamName}`;
+      });
+    }
 
     function showStandby(msg) {
       const el = waitingArea.querySelector('.lb-waiting-text');
@@ -137,20 +124,14 @@
         btn.onclick = () => submitAnswer(i);
         optionsGrid.appendChild(btn);
       });
-      feedbackMsg.textContent = 'SELECT THE CORRECT OPTION!';
-      feedbackMsg.style.color = 'var(--neon-cyan)';
     }
 
     function submitAnswer(idx) {
       const btns = optionsGrid.querySelectorAll('.opt-btn');
       btns.forEach(b => b.disabled = true);
       btns[idx].classList.add('selected');
-      
-      feedbackMsg.textContent = 'ANSWER SUBMITTED. WAITING...';
-      
-      // Emit to server (Host will receive via socket or polling)
       socket.emit('r3:submit', {
-        teamId: currentTeam,
+        teamId: Storage.getTeamId(),
         answerIdx: idx,
         timestamp: Date.now()
       });
