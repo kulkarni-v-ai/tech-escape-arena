@@ -243,10 +243,10 @@
     saveState();
     renderQuestion(state.currentQ);
 
-    // Auto advance after 3 seconds
+    // Auto advance after 1.5 seconds for high-speed gameplay
     setTimeout(() => {
       if (state.battleStatus === 'revealed') nextQuestion();
-    }, 3000);
+    }, 1500);
   }
 
   // ─── Question Flow ───

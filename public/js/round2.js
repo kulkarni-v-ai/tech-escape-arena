@@ -78,6 +78,9 @@
       formSection.classList.remove('locked-form');
       btnSubmit.disabled = false;
       btnSubmit.textContent = 'SUBMIT ANSWER';
+    } else if (data.status === 'ended') {
+      // Auto-show the success/transition overlay when round ends
+      showSuccess(teamInput.value || Storage.getTeamId() || 'UNSYNCED');
     }
   }
 

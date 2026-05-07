@@ -131,11 +131,15 @@
 
   <!-- Success Overlay -->
   <div class="r2-success-overlay" id="success-overlay">
-    <div class="r2-success-icon">🔒</div>
-    <h1 class="r2-success-title">SUBMISSION LOCKED</h1>
-    <p class="r2-success-sub">Your answer has been recorded</p>
-    <div class="r2-success-line"></div>
-    <p class="r2-success-team" id="success-team"></p>
+      <div class="success-content" style="text-align:center;padding:2rem;">
+        <div class="success-icon" style="font-size:3rem;margin-bottom:1rem;">✓</div>
+        <h2 style="color:var(--neon-cyan);letter-spacing:2px;">TRANSMISSION RECEIVED</h2>
+        <p>Team <span id="success-team" style="font-weight:bold;color:#fff;"></span>: Your Round 2 data has been logged.</p>
+        <p style="color:var(--text-dim);font-size:0.9rem;margin-top:1rem;">Wait for the host to announce Round 2 results.</p>
+        <div style="margin-top:2rem;">
+          <a href="/cyberbattle.html" class="a2-btn green" style="text-decoration:none;display:inline-block;padding:10px 20px;">PROCEED TO CYBER BATTLE</a>
+        </div>
+      </div>
   </div>
 
   <div class="r2-container" style="animation: fadeIn 1s ease;">

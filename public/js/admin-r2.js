@@ -33,6 +33,7 @@
   const btnStart = document.getElementById('btn-start');
   const btnPause = document.getElementById('btn-pause');
   const btnResume = document.getElementById('btn-resume');
+  const btnEnd = document.getElementById('btn-end');
   const btnReset = document.getElementById('btn-reset');
   const answerInput = document.getElementById('answer-input');
   const btnSetAnswer = document.getElementById('btn-set-answer');
@@ -100,9 +101,10 @@
     if (status === 'waiting') {
       adminTimer.textContent = '45:00';
       timerStatus.textContent = 'WAITING';
-      btnStart.style.display = '';
+      btnStart.style.display = 'none';
       btnPause.style.display = 'none';
       btnResume.style.display = 'none';
+      btnEnd.style.display = '';
     } else if (status === 'running') {
       const m = Math.floor(remaining / 60000);
       const s = Math.floor((remaining % 60000) / 1000);
@@ -112,6 +114,7 @@
       btnStart.style.display = 'none';
       btnPause.style.display = '';
       btnResume.style.display = 'none';
+      btnEnd.style.display = '';
     } else if (status === 'paused') {
       const m = Math.floor(remaining / 60000);
       const s = Math.floor((remaining % 60000) / 1000);
@@ -121,6 +124,7 @@
       btnStart.style.display = 'none';
       btnPause.style.display = 'none';
       btnResume.style.display = '';
+      btnEnd.style.display = '';
     } else if (status === 'ended') {
       adminTimer.textContent = '00:00';
       timerStatus.textContent = "TIME'S UP";
@@ -128,6 +132,7 @@
       btnStart.style.display = 'none';
       btnPause.style.display = 'none';
       btnResume.style.display = 'none';
+      btnEnd.style.display = 'none';
     }
 
     // Lock button text
@@ -144,6 +149,11 @@
   });
   btnPause.addEventListener('click', () => adminPost('/api/admin/timer/pause'));
   btnResume.addEventListener('click', () => adminPost('/api/admin/timer/resume'));
+  btnEnd.addEventListener('click', () => {
+    showModal('END ROUND', 'Stop the timer and end Round 2 for everyone?', () => {
+      adminPost('/api/admin/timer/end');
+    });
+  });
   btnReset.addEventListener('click', () => {
     showModal('RESET TIMER', 'Reset the timer to 45:00? This cannot be undone.', () => {
       adminPost('/api/admin/timer/reset');

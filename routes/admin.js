@@ -71,6 +71,18 @@ router.post('/timer/resume', getAuth, async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Server error' }); }
 });
 
+// POST /api/admin/timer/end
+router.post('/timer/end', getAuth, async (req, res) => {
+  try {
+    const config = await getR2Config();
+    config.status = 'ended';
+    await config.save();
+    const io = req.app.get('io');
+    if (io) io.emit('timer:sync', { remaining: 0, status: 'ended', isLocked: config.isLocked });
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: 'Server error' }); }
+});
+
 // POST /api/admin/timer/reset
 router.post('/timer/reset', getAuth, async (req, res) => {
   try {
