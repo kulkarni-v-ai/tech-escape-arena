@@ -620,22 +620,36 @@
       return;
     }
 
-    // Validate against the team's unique login code from server
+    // Validate against the team's unique login code via server
     const teamId = Storage.getTeamId();
     try {
-      const res = await fetch(`/api/team/${teamId}`);
+      const res = await fetch('/api/login-verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ teamId, loginCode: value })
+      });
+      
       if (res.ok) {
-        const team = await res.json();
-        if (value === team.loginCode) {
+        const data = await res.json();
+        if (data.success) {
+          // Save session token returned by server
+          Storage.setSessionToken(data.sessionToken);
+          
+          // Save updated team data (includes loggedIn: true)
+          const teams = Storage.getAllTeams();
+          teams[teamId] = data.team;
+          Storage.saveAllTeams(teams);
+          
           onAccessGranted();
-        } else {
-          const attempts = Storage.incrementLoginAttempts();
-          showError('Access Denied. Incorrect decoding.');
-          shakeInput();
+        }
+      } else {
+        const err = await res.json();
+        const attempts = Storage.incrementLoginAttempts();
+        showError(err.error || 'Access Denied.');
+        shakeInput();
 
-          if (attempts >= 3 && extraHint) {
-            extraHint.classList.add('visible');
-          }
+        if (attempts >= 3 && extraHint) {
+          extraHint.classList.add('visible');
         }
       }
     } catch (e) {

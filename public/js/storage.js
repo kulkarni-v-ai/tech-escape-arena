@@ -7,7 +7,8 @@ const Storage = (() => {
   const KEYS = {
     CURRENT_TEAM: 'tea_current_team',
     ALL_TEAMS: 'tea_all_teams',
-    INTRO_PLAYED: 'tea_intro_played'
+    INTRO_PLAYED: 'tea_intro_played',
+    SESSION_TOKEN: 'tea_session_token'
   };
 
   function set(key, value) {
@@ -37,6 +38,25 @@ const Storage = (() => {
       const resTeams = await fetch('/api/teams', { headers });
       if (resTeams.ok) {
         const serverTeams = await resTeams.json();
+        const localTeams = getAllTeams();
+        
+        // Intelligent Merge: Don't overwrite active team if local has more puzzles solved 
+        // OR if server says we are logged out but we just logged in.
+        const activeId = getActiveTeamId();
+        if (activeId && serverTeams[activeId]) {
+           const sTeam = serverTeams[activeId];
+           const lTeam = localTeams[activeId];
+           
+           // One-device restriction: if server has a different session token, we were logged out from another device
+           const localSession = getSessionToken();
+           if (localSession && sTeam.sessionToken && sTeam.sessionToken !== localSession) {
+              console.warn('Session invalidated by another device.');
+              setLoggedIn(false);
+              window.location.href = 'index.html';
+              return;
+           }
+        }
+
         set(KEYS.ALL_TEAMS, serverTeams);
       }
       
@@ -237,11 +257,30 @@ const Storage = (() => {
 
   function isLoggedIn() {
     const t = getActiveTeam();
-    return t ? (t.loggedIn || false) : false;
+    if (!t || !t.loggedIn) return false;
+    
+    // Also verify session token if available
+    const localToken = getSessionToken();
+    if (localToken && t.sessionToken && t.sessionToken !== localToken) {
+      return false;
+    }
+    
+    return true;
   }
 
   function setLoggedIn(val) {
     saveActiveTeam({ loggedIn: val });
+    if (val === false) {
+      remove(KEYS.SESSION_TOKEN);
+    }
+  }
+
+  function getSessionToken() {
+    return get(KEYS.SESSION_TOKEN);
+  }
+
+  function setSessionToken(token) {
+    set(KEYS.SESSION_TOKEN, token);
   }
 
   function resetAll() {
@@ -271,6 +310,8 @@ const Storage = (() => {
     incrementLoginAttempts,
     isLoggedIn,
     setLoggedIn,
+    getSessionToken,
+    setSessionToken,
     resetAll,
     syncWithServer,
   };

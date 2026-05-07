@@ -15,7 +15,8 @@ const teamSchema = new mongoose.Schema({
   isQualified: { type: Boolean, default: false },
   currentRound: { type: Number, default: 1 },
   eliminated: { type: Boolean, default: false },
-  score: { type: Number, default: 0 }
+  score: { type: Number, default: 0 },
+  sessionToken: { type: String, default: null }
 }, { timestamps: true });
 
 // Virtual to keep compatibility with existing frontend expecting 'id'

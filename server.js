@@ -98,7 +98,13 @@ app.get('/api/teams', async (req, res) => {
   try {
     const teams = await Team.find().lean();
     const teamsObj = {};
-    teams.forEach(t => { teamsObj[t.teamId] = { ...t, id: t.teamId, name: t.teamName }; });
+    teams.forEach(t => { 
+      teamsObj[t.teamId] = { 
+        ...t, 
+        id: t.teamId, 
+        name: t.teamName 
+      }; 
+    });
     res.json(teamsObj);
   } catch (err) {
     console.error('GET /api/teams error:', err.message);
@@ -135,11 +141,52 @@ app.post('/api/register', async (req, res) => {
 app.post('/api/team/:id/update', async (req, res) => {
   try {
     const { id } = req.params;
-    const team = await Team.findOneAndUpdate({ teamId: id }, req.body, { returnDocument: 'after' });
+    const updates = { ...req.body };
+    
+    // Map compatibility fields back to schema
+    if (updates.id) { updates.teamId = updates.id; delete updates.id; }
+    if (updates.name) { updates.teamName = updates.name; delete updates.name; }
+    
+    const team = await Team.findOneAndUpdate({ teamId: id }, updates, { returnDocument: 'after' }).lean();
     if (!team) return res.status(404).json({ error: 'Team not found' });
-    res.json({ success: true, team: { ...team.toObject(), id: team.teamId } });
+    
+    res.json({ 
+      success: true, 
+      team: { ...team, id: team.teamId, name: team.teamName } 
+    });
   } catch (err) {
+    console.error('Update team error:', err);
     res.status(500).json({ error: 'Database error' });
+  }
+});
+
+app.post('/api/login-verify', async (req, res) => {
+  try {
+    const { teamId, loginCode } = req.body;
+    if (!teamId || !loginCode) return res.status(400).json({ error: 'Missing teamId or loginCode' });
+
+    const team = await Team.findOne({ teamId });
+    if (!team) return res.status(404).json({ error: 'Team not found' });
+
+    if (team.loginCode !== loginCode.toUpperCase()) {
+      return res.status(401).json({ error: 'Incorrect decoding' });
+    }
+
+    // Generate new session token (current timestamp is enough for uniqueness per team)
+    const sessionToken = Date.now().toString();
+    
+    team.loggedIn = true;
+    team.sessionToken = sessionToken;
+    await team.save();
+
+    res.json({ 
+      success: true, 
+      sessionToken,
+      team: { ...team.toObject(), id: team.teamId, name: team.teamName }
+    });
+  } catch (err) {
+    console.error('Login verify error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

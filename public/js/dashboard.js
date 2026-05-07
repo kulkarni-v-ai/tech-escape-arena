@@ -11,10 +11,35 @@
     return;
   }
 
-  const { puzzles: Puzzles, finalCode: FINAL_CODE } = getPuzzlesForTeam(Storage.getTeamId());
+  let Puzzles = [];
+  let FINAL_CODE = '';
+  
+  try {
+    const teamId = Storage.getTeamId();
+    if (!teamId) {
+       console.error('No team ID found in storage.');
+       window.location.href = 'index.html';
+       return;
+    }
+    const puzzleData = getPuzzlesForTeam(teamId);
+    Puzzles = puzzleData.puzzles;
+    FINAL_CODE = puzzleData.finalCode;
+  } catch (err) {
+    console.error('Failed to load puzzles:', err);
+    // Display error on screen for the user
+    document.body.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:#000;color:#ff003c;font-family:monospace;text-align:center;padding:20px;">
+        <h1 style="font-size:2rem;text-shadow:0 0 10px #ff003c;">SYSTEM ERROR</h1>
+        <p style="color:#888;">Critical failure during arena initialization.</p>
+        <p style="font-size:0.8rem;background:#111;padding:10px;border:1px solid #333;margin-top:10px;">${err.message}</p>
+        <button style="margin-top:20px;padding:10px 20px;background:transparent;border:1px solid #ff003c;color:#ff003c;cursor:pointer;" onclick="location.reload()">RETRY UPLINK</button>
+      </div>
+    `;
+    return;
+  }
   
   const TOTAL_TIME = 45 * 60 * 1000; // 45 minutes in ms
-  const TOTAL_PUZZLES = Puzzles.length;
+  const TOTAL_PUZZLES = Puzzles.length || 4;
 
   // --- Console easter egg ---
   console.log(
@@ -43,7 +68,12 @@
 
   // --- Init ---
   const currentTeam = Storage.getActiveTeam();
-  teamDisplay.textContent = 'TEAM ID: ' + Storage.getTeamId();
+  const activeId = Storage.getTeamId();
+  
+  if (teamDisplay) {
+    teamDisplay.textContent = 'TEAM ID: ' + (activeId || 'UNKNOWN');
+  }
+  
   if (teamNameDisplay && currentTeam) {
     teamNameDisplay.textContent = currentTeam.name || currentTeam.teamName || '';
   }
