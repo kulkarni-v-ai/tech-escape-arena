@@ -270,12 +270,14 @@ app.post('/api/adminState', requireAuth, async (req, res) => {
         { startedAt: null, status: 'waiting', totalPausedMs: 0, pausedAt: null },
         { upsert: true }
       );
-      roundNum = Math.min(updates.currentRound || roundNum + 1, 4);
+      // Increment round and update the selector doc so the Admin UI stays in sync
+      const nextRound = Math.min(updates.currentRound || (roundNum + 1), 4);
       await RoundConfig.findOneAndUpdate(
-        { roundNumber: roundNum },
-        { $setOnInsert: { status: 'waiting', duration: 45 * 60 * 1000 } },
+        { roundNumber: 0 },
+        { selectedRound: nextRound },
         { upsert: true }
       );
+      roundNum = nextRound;
 
     } else {
       const updateObj = {};
