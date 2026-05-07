@@ -53,8 +53,36 @@
   // Initialize socket at the very top with safety check
   let socket;
   try {
-    if (typeof io !== 'undefined') socket = io();
+    if (typeof io !== 'undefined') {
+      socket = io();
+      socket.on('r3:submission', handleParticipantSubmission);
+    }
   } catch(e) { console.error('Socket.io failed to initialize:', e); }
+
+  function handleParticipantSubmission(data) {
+    if (state.battleStatus !== 'question') return;
+    const match = state.bracket[state.currentMatch];
+    if (!match) return;
+
+    const fuzzy = (s) => (s || '').toString().toLowerCase().replace(/[^a-z0-9]/g, '').trim();
+    const submitId = fuzzy(data.teamId);
+    const submitName = fuzzy(data.teamName);
+    
+    const isTeamA = (fuzzy(match.teamA) === submitId || (submitName && fuzzy(match.teamA) === submitName));
+    const isTeamB = (fuzzy(match.teamB) === submitId || (submitName && fuzzy(match.teamB) === submitName));
+
+    if (isTeamA && answerA === null) {
+      answerA = data.answerIdx;
+      sfxTick();
+      renderAnswerButtons(state.currentQ);
+      checkAnswered();
+    } else if (isTeamB && answerB === null) {
+      answerB = data.answerIdx;
+      sfxTick();
+      renderAnswerButtons(state.currentQ);
+      checkAnswered();
+    }
+  }
 
   function saveState() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
