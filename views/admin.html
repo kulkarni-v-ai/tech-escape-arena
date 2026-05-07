@@ -665,7 +665,10 @@
       }
       
       function renderTable() {
-        const teams = Object.values(Storage.getAllTeams());
+        let teamsData = Storage.getAllTeams();
+        // Convert Map/Object to Array if needed
+        const teams = Array.isArray(teamsData) ? teamsData : Object.values(teamsData);
+        
         teamCount.textContent = `${teams.length} teams registered`;
         tbody.innerHTML = '';
 
