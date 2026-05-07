@@ -63,9 +63,13 @@
   <div id="debug-info" style="position:fixed; bottom:10px; right:10px; font-size:0.6rem; color:rgba(255,255,255,0.2); font-family:var(--font-mono); pointer-events:none;">ID: UNKNOWN | NAME: UNKNOWN</div>
 
   <script src="/socket.io/socket.io.js"></script>
-  <script src="js/storage.js"></script>
+  <script src="js/storage.js?v=final"></script>
   <script>
-    const socket = io();
+    let socket;
+    try {
+      if (typeof io !== 'undefined') socket = io();
+    } catch(e) { console.error('Socket init failed:', e); }
+    
     const btnBuzzer = document.getElementById('btn-buzzer');
     const waitingArea = document.getElementById('waiting-area');
     const battleArea = document.getElementById('battle-area');
