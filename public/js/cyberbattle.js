@@ -50,7 +50,12 @@
     };
   }
 
-  const socket = io();
+  // Initialize socket at the very top with safety check
+  let socket;
+  try {
+    if (typeof io !== 'undefined') socket = io();
+  } catch(e) { console.error('Socket.io failed to initialize:', e); }
+
   function saveState() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     if (socket) socket.emit('r3:updateState', state);

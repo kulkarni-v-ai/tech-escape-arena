@@ -6,6 +6,7 @@
   <title>Tech Escape Arena – Round 3: Cyber Battle</title>
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚔️</text></svg>" />
+  <script src="/socket.io/socket.io.js"></script>
   <style>
     .cb-wrap{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;overflow:hidden;}
     /* Top bar */
@@ -208,7 +209,7 @@
     <button class="cb-ctrl" style="margin-top:2rem;" onclick="document.getElementById('bracket-overlay').classList.remove('active')">CLOSE</button>
   </div>
 
-  <script src="js/storage.js"></script>
-  <script src="js/cyberbattle.js"></script>
+  <script src="js/storage.js?v=2.0"></script>
+  <script src="js/cyberbattle.js?v=2.0"></script>
 </body>
 </html>
