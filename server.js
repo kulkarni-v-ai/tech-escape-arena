@@ -298,37 +298,37 @@ app.post('/api/adminState', requireAuth, async (req, res) => {
       await RoundConfig.findOneAndUpdate({ roundNumber: 0 }, { selectedRound: 1 }, { upsert: true });
       roundNum = 1;
     }
-      const updateObj = {};
-      if (updates.isPaused !== undefined) {
-        if (updates.isPaused) {
-          updateObj.status = 'paused';
-          updateObj.pausedAt = Date.now();
-        } else {
-          updateObj.status = 'running';
-          if (config?.pausedAt) {
-            updateObj.totalPausedMs = (config.totalPausedMs || 0) + (Date.now() - config.pausedAt);
-          }
-          updateObj.pausedAt = null;
+    
+    const updateObj = {};
+    if (updates.isPaused !== undefined) {
+      if (updates.isPaused) {
+        updateObj.status = 'paused';
+        updateObj.pausedAt = Date.now();
+      } else {
+        updateObj.status = 'running';
+        if (config?.pausedAt) {
+          updateObj.totalPausedMs = (config.totalPausedMs || 0) + (Date.now() - config.pausedAt);
         }
+        updateObj.pausedAt = null;
       }
-      if (updates.isLocked !== undefined) updateObj.isLocked = updates.isLocked;
-      if (updates.currentRound !== undefined) {
-        roundNum = Math.min(updates.currentRound, 4);
-        // Save the admin's selection
-        await RoundConfig.findOneAndUpdate(
-          { roundNumber: 0 },
-          { roundNumber: 0, selectedRound: roundNum },
-          { upsert: true }
-        );
-        await RoundConfig.findOneAndUpdate(
-          { roundNumber: roundNum },
-          { $setOnInsert: { status: 'waiting', duration: 45 * 60 * 1000 } },
-          { upsert: true }
-        );
-      }
-      if (Object.keys(updateObj).length > 0) {
-        await RoundConfig.findOneAndUpdate({ roundNumber: roundNum }, updateObj, { upsert: true });
-      }
+    }
+    if (updates.isLocked !== undefined) updateObj.isLocked = updates.isLocked;
+    if (updates.currentRound !== undefined) {
+      roundNum = Math.min(updates.currentRound, 4);
+      // Save the admin's selection
+      await RoundConfig.findOneAndUpdate(
+        { roundNumber: 0 },
+        { roundNumber: 0, selectedRound: roundNum },
+        { upsert: true }
+      );
+      await RoundConfig.findOneAndUpdate(
+        { roundNumber: roundNum },
+        { $setOnInsert: { status: 'waiting', duration: 45 * 60 * 1000 } },
+        { upsert: true }
+      );
+    }
+    if (Object.keys(updateObj).length > 0) {
+      await RoundConfig.findOneAndUpdate({ roundNumber: roundNum }, updateObj, { upsert: true });
     }
 
     // Build response
