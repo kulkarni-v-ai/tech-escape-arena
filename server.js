@@ -259,9 +259,7 @@ app.post('/api/adminState', requireAuth, async (req, res) => {
     }
 
     if (updates.startRound) {
-      // STOP ALL OTHER ROUNDS FIRST to prevent "ghost" timers
       await RoundConfig.updateMany({ roundNumber: { $ne: roundNum } }, { status: 'ended', startedAt: null });
-      
       await RoundConfig.findOneAndUpdate(
         { roundNumber: roundNum },
         { startedAt: Date.now(), status: 'running', totalPausedMs: 0, pausedAt: null },
@@ -270,26 +268,23 @@ app.post('/api/adminState', requireAuth, async (req, res) => {
       await Team.updateMany({ startTime: null }, { startTime: Date.now() });
 
     } else if (updates.restartRound) {
-      // STOP ALL OTHER ROUNDS FIRST
       await RoundConfig.updateMany({ roundNumber: { $ne: roundNum } }, { status: 'ended', startedAt: null });
-
       await RoundConfig.findOneAndUpdate(
         { roundNumber: roundNum },
         { startedAt: Date.now(), status: 'running', totalPausedMs: 0, pausedAt: null },
         { upsert: true }
       );
       await Team.updateMany({}, { startTime: Date.now(), endTime: null });
+    }
 
     if (updates.resetRound) {
-      // UNIVERSAL STOP: Kill all timers across all rounds
+      // UNIVERSAL STOP
       await RoundConfig.updateMany({}, { startedAt: null, status: 'waiting', totalPausedMs: 0, pausedAt: null });
-      // Reset selection to Round 1
       await RoundConfig.findOneAndUpdate({ roundNumber: 0 }, { selectedRound: 1 }, { upsert: true });
       roundNum = 1;
     }
 
     if (updates.resetProgress) {
-      // CLEAR ALL TEAM PROGRESS & STOP ALL TIMERS
       await Team.updateMany({}, {
         puzzlesSolved: 0,
         puzzleAnswers: {},
