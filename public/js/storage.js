@@ -291,6 +291,7 @@ const Storage = (() => {
     isIntroPlayed,
     setIntroPlayed,
     getAllTeams,
+    getActiveTeam,
     saveAllTeams,
     registerTeam,
     teamExists,
