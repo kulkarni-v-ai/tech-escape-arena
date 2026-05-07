@@ -71,33 +71,45 @@
     const isTeamA = (fuzzy(match.teamA) === submitId || (submitName && fuzzy(match.teamA) === submitName));
     const isTeamB = (fuzzy(match.teamB) === submitId || (submitName && fuzzy(match.teamB) === submitName));
 
-    // Check if answer is correct
     const selectedOption = state.currentQ.options[data.answerIdx];
     const isCorrect = selectedOption === state.currentQ.correctAnswer;
     const label = String.fromCharCode(65 + data.answerIdx);
 
     if (isTeamA && answerA === null) {
       answerA = data.answerIdx;
-      sfxTick();
-      // Show admin: Team A answered
       const statusA = document.getElementById('status-a');
       if (statusA) {
         statusA.textContent = `📥 ANSWERED: ${label}` + (isCorrect ? ' ✅' : ' ❌');
         statusA.className = 'cb-team-status ' + (isCorrect ? 'cb-status-correct' : 'cb-status-wrong');
       }
+      if (isCorrect) {
+        // First correct answer wins — award point and reveal immediately
+        sfxCorrect();
+        renderAnswerButtons(state.currentQ);
+        setTimeout(revealAnswer, 500);
+        return;
+      }
+      sfxWrong();
       renderAnswerButtons(state.currentQ);
-      checkAnswered();
+      // If both answered wrong, auto-reveal
+      if (answerB !== null) setTimeout(revealAnswer, 500);
     } else if (isTeamB && answerB === null) {
       answerB = data.answerIdx;
-      sfxTick();
-      // Show admin: Team B answered
       const statusB = document.getElementById('status-b');
       if (statusB) {
         statusB.textContent = `📥 ANSWERED: ${label}` + (isCorrect ? ' ✅' : ' ❌');
         statusB.className = 'cb-team-status ' + (isCorrect ? 'cb-status-correct' : 'cb-status-wrong');
       }
+      if (isCorrect) {
+        sfxCorrect();
+        renderAnswerButtons(state.currentQ);
+        setTimeout(revealAnswer, 500);
+        return;
+      }
+      sfxWrong();
       renderAnswerButtons(state.currentQ);
-      checkAnswered();
+      // If both answered wrong, auto-reveal
+      if (answerA !== null) setTimeout(revealAnswer, 500);
     }
   }
 
@@ -327,8 +339,9 @@
       return;
     }
 
-    // Pick random unused question
-    const unused = questions.filter(q => !match.usedQuestions.includes(q.id));
+    // Pick random unused question — unique across ALL matches
+    const allUsed = state.bracket.flatMap(m => m.usedQuestions || []);
+    const unused = questions.filter(q => !allUsed.includes(q.id));
     if (unused.length === 0) { endBattle(); return; }
     const q = unused[Math.floor(Math.random() * unused.length)];
     match.usedQuestions.push(q.id);
