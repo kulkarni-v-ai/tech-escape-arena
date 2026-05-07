@@ -97,10 +97,10 @@
   {"id":96,"category":"Riddles","question":"What gets wetter the more it dries?","options":["A sponge","A towel","Rain","Ice"],"correctAnswer":"A towel","difficulty":"easy","timer":30},
   {"id":97,"category":"Riddles","question":"What has a head and a tail but no body?","options":["A snake","A coin","A worm","A pin"],"correctAnswer":"A coin","difficulty":"easy","timer":30},
   {"id":98,"category":"Riddles","question":"I'm tall when I'm young, short when I'm old. What am I?","options":["A tree","A candle","A person","A shadow"],"correctAnswer":"A candle","difficulty":"easy","timer":30},
-  {"id":100,"category":"Riddles","question":"What building has the most stories?","options":["A skyscraper","A library","A hotel","A museum"],"correctAnswer":"A library","difficulty":"easy","timer":30},
-  {"id":101,"category":"Tech & Cyber","question":"What does 'WWW' stand for in a website address?","options":["World Wide Web","World Wild Web","Web Wide World","Wide World Web"],"correctAnswer":"World Wide Web","difficulty":"easy","timer":30},
-  {"id":102,"category":"Tech & Cyber","question":"Which key is used to copy text on a computer?","options":["Ctrl+P","Ctrl+V","Ctrl+C","Ctrl+X"],"correctAnswer":"Ctrl+C","difficulty":"easy","timer":30},
-  {"id":103,"category":"Tech & Cyber","question":"What is the brain of the computer?","options":["RAM","Hard Drive","CPU","Monitor"],"correctAnswer":"CPU","difficulty":"easy","timer":30},
-  {"id":104,"category":"Tech & Cyber","question":"Which device is used to type text?","options":["Mouse","Monitor","Keyboard","Printer"],"correctAnswer":"Keyboard","difficulty":"easy","timer":30},
-  {"id":105,"category":"Tech & Cyber","question":"What is a portable computer called?","options":["Desktop","Server","Tablet","Laptop"],"correctAnswer":"Laptop","difficulty":"easy","timer":30}
+  {"id":100,"category":"Tech & Cyber","question":"Which HTTP status code means 'Not Found'?","options":["200","403","404","500"],"correctAnswer":"404","difficulty":"medium","timer":25},
+  {"id":101,"category":"Tech & Cyber","question":"What does 'SUDO' stand for in Linux/Unix commands?","options":["SuperUser Do","Single User Direct Order","Secure User Data Output","System Unit Direct Operation"],"correctAnswer":"SuperUser Do","difficulty":"medium","timer":25},
+  {"id":102,"category":"Tech & Cyber","question":"Who is known as the father of the World Wide Web?","options":["Bill Gates","Steve Jobs","Tim Berners-Lee","Mark Zuckerberg"],"correctAnswer":"Tim Berners-Lee","difficulty":"medium","timer":30},
+  {"id":103,"category":"Tech & Cyber","question":"Which of these is NOT an operating system?","options":["Linux","Oracle","Windows","macOS"],"correctAnswer":"Oracle","difficulty":"medium","timer":25},
+  {"id":104,"category":"Tech & Cyber","question":"What does 'URL' stand for?","options":["Universal Resource Locator","Uniform Resource Locator","Unified Reference Link","Universal Reference Locator"],"correctAnswer":"Uniform Resource Locator","difficulty":"medium","timer":25},
+  {"id":105,"category":"Tech & Cyber","question":"Which file extension is used for a Python script?","options":".js",".py",".java",".cpp"],"correctAnswer":".py","difficulty":"medium","timer":20}
 ]
