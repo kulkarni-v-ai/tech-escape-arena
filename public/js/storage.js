@@ -311,6 +311,7 @@ const Storage = (() => {
     incrementLoginAttempts,
     isLoggedIn,
     setLoggedIn,
+    getTeamName: () => Storage.getActiveTeam() ? Storage.getActiveTeam().name : null,
     getSessionToken,
     setSessionToken,
     resetAll,
