@@ -230,14 +230,28 @@
 
       // Render teams table
       teamsBody.innerHTML = '';
+      if (!Array.isArray(teams)) {
+        console.error('Teams data is not an array:', teams);
+        return;
+      }
+
       teams.forEach(t => {
         const tr = document.createElement('tr');
         const sub = t.round2Submission;
         let statusBadge;
-        if (t.eliminated) statusBadge = '<span class="badge badge-red">ELIMINATED</span>';
-        else if (sub?.qualified) statusBadge = '<span class="badge badge-green">QUALIFIED</span>';
-        else if (sub) statusBadge = '<span class="badge badge-yellow">SUBMITTED</span>';
-        else statusBadge = '<span class="badge badge-dim">PENDING</span>';
+        
+        // Use Round 1 qualification if no R2 data yet
+        if (t.eliminated) {
+          statusBadge = '<span class="badge badge-red">ELIMINATED</span>';
+        } else if (sub?.qualified) {
+          statusBadge = '<span class="badge badge-green">QUALIFIED</span>';
+        } else if (sub) {
+          statusBadge = '<span class="badge badge-yellow">R2 SUBMITTED</span>';
+        } else if (t.isQualified) {
+          statusBadge = '<span class="badge badge-green">R1 QUALIFIED</span>';
+        } else {
+          statusBadge = '<span class="badge badge-dim">PENDING</span>';
+        }
 
         tr.innerHTML = `
           <td>${t.teamId}</td>
