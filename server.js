@@ -143,9 +143,10 @@ app.post('/api/team/:id/update', async (req, res) => {
     const { id } = req.params;
     const updates = { ...req.body };
     
-    // Map compatibility fields back to schema
-    if (updates.id) { updates.teamId = updates.id; delete updates.id; }
-    if (updates.name) { updates.teamName = updates.name; delete updates.name; }
+    // Auto-qualify if 4 or more puzzles solved in Round 1
+    if (updates.puzzlesSolved >= 4) {
+      updates.isQualified = true;
+    }
     
     const team = await Team.findOneAndUpdate({ teamId: id }, updates, { returnDocument: 'after' }).lean();
     if (!team) return res.status(404).json({ error: 'Team not found' });
