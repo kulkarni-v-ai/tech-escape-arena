@@ -259,6 +259,9 @@ app.post('/api/adminState', requireAuth, async (req, res) => {
     }
 
     if (updates.startRound) {
+      // STOP ALL OTHER ROUNDS FIRST to prevent "ghost" timers
+      await RoundConfig.updateMany({ roundNumber: { $ne: roundNum } }, { status: 'ended', startedAt: null });
+      
       await RoundConfig.findOneAndUpdate(
         { roundNumber: roundNum },
         { startedAt: Date.now(), status: 'running', totalPausedMs: 0, pausedAt: null },
@@ -267,6 +270,9 @@ app.post('/api/adminState', requireAuth, async (req, res) => {
       await Team.updateMany({ startTime: null }, { startTime: Date.now() });
 
     } else if (updates.restartRound) {
+      // STOP ALL OTHER ROUNDS FIRST
+      await RoundConfig.updateMany({ roundNumber: { $ne: roundNum } }, { status: 'ended', startedAt: null });
+
       await RoundConfig.findOneAndUpdate(
         { roundNumber: roundNum },
         { startedAt: Date.now(), status: 'running', totalPausedMs: 0, pausedAt: null },
